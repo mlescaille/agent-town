@@ -64,7 +64,13 @@ describe("license verification", () => {
       {
         ...claims,
         agent: agentSpiffe("researcher"),
-        act: { sub: agentSpiffe("planner") },
+        act: {
+          sub: agentSpiffe("planner"),
+          instance: "run-planner",
+          name: "Planner",
+          task: "Summarize the primary calendar",
+          on_behalf_of: { type: "user", user: "user:alice" },
+        },
       },
       env.issuer,
       LICENSE_TYP,

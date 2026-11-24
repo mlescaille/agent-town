@@ -4,14 +4,17 @@ import { join } from "node:path";
 
 import { startCheckpoint, startDemoUpstream } from "@agent-license/checkpoint";
 import {
+  LICENSE_TYP,
   agentSpiffe,
   canonicalize,
+  canonicalStatement,
   createJustification,
   createUserRequest,
   delegationChain,
   initKeystore,
   loadKeystore,
   publicJwk,
+  signJws,
   verifyConsistency,
   verifyInclusion,
   verifyLicense,
@@ -21,6 +24,7 @@ import {
   type AuthorizationDetail,
   type LicenseClaims,
   type Mandate,
+  type Principal,
 } from "@agent-license/core";
 import { startIssuer } from "@agent-license/issuer";
 import { startLog } from "@agent-license/log";
@@ -169,6 +173,113 @@ export async function runDemo(): Promise<{ transcript: string; ok: boolean }> {
       );
     }
 
+    const officeGoal = "Prepare a summary of the matter file";
+    const officeTask = `${officeGoal}: search the matter documents for the cited exhibit`;
+    const officeWhy = "The office needs the cited exhibit from the matter file";
+    const officeName = "Office of A. Example, Attorney at Law";
+    const office = await issue(
+      issuer.url,
+      keys,
+      { type: "user_goal", goal: officeGoal },
+      scope(["documents.search", "documents.read"], ["documents:matter"], 5),
+      {
+        principal: { type: "org", name: officeName, user: "user:alice" },
+        name: "Planner",
+        instance: "planner-1",
+        task: officeGoal,
+      },
+    );
+    const officeExp = Math.floor(Date.now() / 1000) + 800;
+    const officeNarrowed = await fetch(`${issuer.url}/v1/licenses/attenuate`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        parent: office.license,
+        agent: agentSpiffe("researcher"),
+        authorization_details: [scope(["documents.search"], ["documents:matter"], 2)],
+        exp: officeExp,
+        name: "Researcher",
+        instance: "subagent-123",
+        task: officeTask,
+      }),
+    });
+    const officeBody = (await officeNarrowed.json()) as { license?: string; error?: { code: string; message?: string } };
+    const officeChildLicense = officeBody.license;
+    if (!officeNarrowed.ok || !officeChildLicense) {
+      throw new Error(`office attenuate failed: ${officeBody.error?.code ?? officeNarrowed.status} ${officeBody.error?.message ?? ""}`);
+    }
+    const officeClaims = verifyLicense(officeChildLicense, publicJwk(keys.issuer));
+    const officeLicense = { request: office.request, license: officeChildLicense, claims: officeClaims };
+    const officeSentence = canonicalStatement({
+      license: officeClaims,
+      action: "documents.search",
+      resource: "documents:matter",
+      reason: officeWhy,
+    });
+    const officeResponse = await throughSdk(
+      checkpoint.url,
+      officeLicense,
+      keys,
+      "documents.search",
+      "documents",
+      "matter",
+      "researcher",
+      officeWhy,
+    );
+    const officeDecision = (await officeResponse.json()) as { code?: string; decision?: string };
+    const loggedOffice = (await fetch(`${log.url}/v1/entries`).then((response) => response.json())) as {
+      entries: Array<{ decision?: string; statement?: string }>;
+    };
+    const stored = loggedOffice.entries.some(
+      (entry) => entry.decision === "allow" && entry.statement === officeSentence,
+    );
+    steps.push({
+      label: "office subagent allow",
+      pass: officeDecision.code === "allow" && stored,
+      detail: officeSentence,
+    });
+
+    const forged = createJustification({
+      license: officeClaims,
+      agentKey: keys.agent("researcher"),
+      action: "documents.search",
+      location: "documents:matter",
+      basis: "user_goal",
+      goal: officeGoal,
+      why: officeWhy,
+      statement: officeSentence.replace("subagent-123", "subagent-999"),
+    });
+    await tool(steps, "forged instance", "identity_mismatch", () =>
+      invoke(checkpoint.url, officeChildLicense, forged, "documents.search", "documents", "matter", office.request),
+    );
+
+    const missingHop = structuredClone(officeClaims);
+    delete (missingHop.act as unknown as Record<string, unknown>).on_behalf_of;
+    await tool(steps, "missing hop", "chain_incomplete", () =>
+      invoke(
+        checkpoint.url,
+        signJws(missingHop as unknown as Record<string, unknown>, keys.issuer, LICENSE_TYP),
+        forged,
+        "documents.search",
+        "documents",
+        "matter",
+      ),
+    );
+
+    const widenedTask = structuredClone(officeClaims);
+    widenedTask.act.task = "Review unrelated client matters";
+    widenedTask.jti = "lic_office_widened_task_01";
+    await tool(steps, "widened task", "task_widened", () =>
+      invoke(
+        checkpoint.url,
+        signJws(widenedTask as unknown as Record<string, unknown>, keys.issuer, LICENSE_TYP),
+        forged,
+        "documents.search",
+        "documents",
+        "matter",
+      ),
+    );
+
     const entriesResponse = await fetch(`${log.url}/v1/entries`);
     const headsResponse = await fetch(`${log.url}/v1/sths`);
     const entriesBody = (await entriesResponse.json()) as { entries: unknown[] };
@@ -187,7 +298,7 @@ export async function runDemo(): Promise<{ transcript: string; ok: boolean }> {
     const tamper = verifyReplayedLog(tampered, headsBody.sths, publicJwk(keys.log));
     steps.push({
       label: "log replay",
-      pass: report.ok && proofsOk && blobs.length === 8 && !tamper.ok,
+      pass: report.ok && proofsOk && blobs.length === 12 && !tamper.ok,
       detail: `entries=${blobs.length} inclusion=${report.inclusion_checked} consistency=${report.consistency_checked} tamper_caught=${!tamper.ok} root=${report.root_hash.slice(0, 16)}`,
     });
 
@@ -209,6 +320,7 @@ async function issue(
   keys: ReturnType<typeof loadKeystore>,
   mandate: Mandate,
   authorization: AuthorizationDetail,
+  identity: { principal?: Principal; name?: string; instance?: string; task?: string } = {},
 ): Promise<{ request: string; license: string; claims: LicenseClaims }> {
   const request = createUserRequest({
     userId: "user:alice",
@@ -217,6 +329,10 @@ async function issue(
     mandate,
     authorizationDetails: [authorization],
     ttlSeconds: 3600,
+    principal: identity.principal,
+    name: identity.name,
+    instance: identity.instance,
+    task: identity.task,
   });
   const response = await fetch(`${issuerUrl}/v1/licenses`, {
     method: "POST",
@@ -240,17 +356,42 @@ async function throughSdk(
   type: string,
   id: string,
   agent: "planner" | "researcher" = "planner",
+  why?: string,
 ): Promise<Response> {
   const call = licensed(fetch, {
     license: issued.license,
     agentPrivateKey: keys.agent(agent),
     checkpoint,
     userRequest: issued.request,
-    why: (tool) => `Doing ${tool.action} on ${tool.location} under the signed mandate.`,
+    why: why ?? ((tool) => `Doing ${tool.action} on ${tool.location} under the signed mandate.`),
   });
   return call("http://tool.invalid/invoke", {
     method: "POST",
     body: JSON.stringify({ action, resource: { type, id } }),
+  });
+}
+
+function invoke(
+  checkpoint: string,
+  license: string,
+  justification: string,
+  action: string,
+  type: string,
+  id: string,
+  userRequest?: string,
+): Promise<Response> {
+  return fetch(`${checkpoint}/v1/invoke`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "agent-license": license,
+      "agent-justification": justification,
+    },
+    body: JSON.stringify({
+      action,
+      resource: { type, id },
+      user_request: userRequest,
+    }),
   });
 }
 

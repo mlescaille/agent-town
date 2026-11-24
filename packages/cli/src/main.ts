@@ -12,7 +12,7 @@ import {
   createJustification,
   createUserRequest,
   decodeJws,
-  delegationChain,
+  delegationSentence,
   expectedBasis,
   initKeystore,
   issueLicense,
@@ -36,8 +36,8 @@ const HELP = `agentlicense — verifiable mandates for AI agents
         [--goal text] [--action name --location type:id]
         [--actions a,b] [--locations t:id,t:id] [--budget n] [--ttl seconds]
   inspect <license> [--home dir]
-  attenuate --parent <license> --agent <name> [--actions a,b] [--locations t:id]
-        [--budget n] [--ttl seconds]
+  attenuate --parent <license> --agent <name> [--name <role>] [--instance <run-id>]
+        [--task <text>] [--actions a,b] [--locations t:id] [--budget n] [--ttl seconds]
   check --license <license> --action <name> --location <type:id> --why <text>
         [--justification <jws>] [--user-request <jws>] [--basis <basis>]
   log verify (--url http://127.0.0.1:43124 | --home dir)
@@ -151,8 +151,7 @@ function inspect(args: string[]): void {
   console.log(`locations ${detail.locations.join(", ")}`);
   console.log(`budget   ${detail.budget ? `max_calls=${detail.budget.max_calls}` : "none"}`);
   if (claims.parent_jti) console.log(`parent   ${claims.parent_jti}`);
-  console.log("chain");
-  for (const id of delegationChain(claims)) console.log(`  ${id}`);
+  console.log(`chain    ${delegationSentence(claims.act)}.`);
   console.log(`signature ${keys ? "valid" : "not checked (no --home keystore)"}`);
 }
 
@@ -167,6 +166,9 @@ function attenuate(args: string[]): void {
       locations: { type: "string" },
       budget: { type: "string" },
       ttl: { type: "string" },
+      name: { type: "string" },
+      instance: { type: "string" },
+      task: { type: "string" },
     },
   });
   if (!values.parent || !values.agent) throw new LicenseError("malformed", "attenuate requires --parent and --agent");
@@ -194,6 +196,9 @@ function attenuate(args: string[]): void {
     authorizationDetails: [scope],
     exp,
     now,
+    name: values.name,
+    instance: values.instance,
+    task: values.task,
   });
   console.error(`attenuated ${child.claims.jti} agent=${child.claims.agent} exp=${child.claims.exp}`);
   process.stdout.write(`${child.license}\n`);

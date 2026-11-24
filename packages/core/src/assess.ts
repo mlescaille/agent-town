@@ -9,6 +9,7 @@ import type {
   OkpPublicJwk,
   UserRequestClaims,
 } from "./types.js";
+import { canonicalStatement } from "./statement.js";
 import { expectedBasis } from "./validate.js";
 
 export interface AssessInput {
@@ -53,6 +54,7 @@ export function assessPresentation(input: AssessInput): Assessment {
     action: input.action,
     location: input.location,
     why: "",
+    statement: "",
     flags,
   };
 
@@ -112,8 +114,19 @@ export function assessPresentation(input: AssessInput): Assessment {
       "justification does not match the license, the originating request, or this call",
     );
   }
-  flags.justification_ok = true;
   flags.request_match = true;
+
+  const statement = canonicalStatement({
+    license,
+    action: input.action,
+    resource: input.location,
+    reason: justification.why,
+  });
+  base.statement = statement;
+  if (justification.statement !== statement) {
+    return fail(base, "identity_mismatch", "justification statement does not match the signed delegation chain");
+  }
+  flags.justification_ok = true;
 
   const basis = expectedBasis(license.mandate.type);
   const goalOk =

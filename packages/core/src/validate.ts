@@ -5,8 +5,10 @@ import {
   ISSUER_ID,
   MAX_CHAIN_DEPTH,
 } from "./constants.js";
+import { canonicalize } from "./encoding.js";
 import { LicenseError } from "./errors.js";
 import { isProfileSpiffe } from "./keys.js";
+import { agentHops, isPrincipal, taskNarrows, terminalPrincipal } from "./statement.js";
 import type {
   ActClaim,
   AuthorizationDetail,
@@ -15,6 +17,7 @@ import type {
   LicenseClaims,
   Mandate,
   MandateType,
+  Principal,
   UserRequestClaims,
 } from "./types.js";
 
@@ -23,6 +26,11 @@ const LOCATION = /^[a-z][a-z0-9_-]*:[A-Za-z0-9._-]+$/;
 const ID = /^[A-Za-z0-9_-]{8,80}$/;
 const USER = /^user:[a-z][a-z0-9-]{0,62}$/;
 const REQ_HASH = /^sha-256:[A-Za-z0-9_-]{43}$/;
+const INSTANCE = /^[A-Za-z][A-Za-z0-9_-]{0,80}$/;
+const ROLE_NAME = /^[A-Za-z][A-Za-z0-9 .'-]{0,79}$/;
+const ORG_NAME = /^[A-Za-z0-9][A-Za-z0-9 .,'()&-]{0,198}$/;
+const TASK_MAX = 1000;
+const STATEMENT_MAX = 4000;
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -139,24 +147,106 @@ export function parseMandate(value: unknown): Mandate {
   throw new LicenseError("malformed", "mandate.type must be direct_request, user_goal, or agent_initiated");
 }
 
+export function parsePrincipal(value: unknown, label: string): Principal {
+  if (!isRecord(value)) throw new LicenseError("malformed", `${label} must be an object`);
+  if (value.type === "user") {
+    assertExactKeys(value, ["type", "user", "name"], label);
+    const user = expectString(value.user, `${label}.user`);
+    if (!USER.test(user)) throw new LicenseError("malformed", `${label}.user must be a user id`);
+    const principal: Principal = { type: "user", user };
+    if (value.name !== undefined) principal.name = parseRoleName(value.name, `${label}.name`);
+    return principal;
+  }
+  if (value.type === "org") {
+    assertExactKeys(value, ["type", "name", "user"], label);
+    const user = expectString(value.user, `${label}.user`);
+    if (!USER.test(user)) throw new LicenseError("malformed", `${label}.user must be a user id`);
+    return { type: "org", name: parseOrgName(value.name), user };
+  }
+  throw new LicenseError("malformed", `${label}.type must be user or org`);
+}
+
+export function parseInstance(value: unknown, label = "instance"): string {
+  const instance = expectString(value, label);
+  if (!INSTANCE.test(instance)) throw new LicenseError("malformed", `${label} is not a run id`);
+  return instance;
+}
+
+export function parseRoleName(value: unknown, label = "name"): string {
+  const name = expectString(value, label);
+  if (!ROLE_NAME.test(name)) throw new LicenseError("malformed", `${label} is not a role name`);
+  return name;
+}
+
+export function parseOrgName(value: unknown): string {
+  const name = expectString(value, "principal.name");
+  if (!ORG_NAME.test(name)) throw new LicenseError("malformed", "principal.name is not an office name");
+  return name;
+}
+
+export function parseTask(value: unknown, label = "task"): string {
+  const task = expectString(value, label);
+  if (task.length > TASK_MAX || /[\u0000-\u001f]/.test(task)) {
+    throw new LicenseError("malformed", `${label} must be 1 to ${TASK_MAX} characters`);
+  }
+  return task;
+}
+
 export function parseAct(value: unknown, depth = 1): ActClaim {
   if (depth > MAX_CHAIN_DEPTH) {
     throw new LicenseError("act_chain", `delegation chain exceeds ${MAX_CHAIN_DEPTH}`);
   }
   if (!isRecord(value)) throw new LicenseError("act_chain", "act claim must be an object");
-  assertExactKeys(value, ["sub", "act"], "act");
+  assertExactKeys(value, ["sub", "instance", "name", "task", "on_behalf_of"], "act");
   const sub = expectString(value.sub, "act.sub");
   if (!isProfileSpiffe(sub)) throw new LicenseError("bad_agent_id", `act.sub is not a profile SPIFFE id: ${sub}`);
-  const act: ActClaim = { sub };
-  if (value.act !== undefined) act.act = parseAct(value.act, depth + 1);
-  return act;
+  if (value.instance === undefined || value.instance === "") {
+    throw new LicenseError("chain_incomplete", "act hop lacks instance");
+  }
+  if (value.name === undefined || value.name === "") {
+    throw new LicenseError("chain_incomplete", "act hop lacks name");
+  }
+  if (value.task === undefined || value.task === "") {
+    throw new LicenseError("chain_incomplete", "act hop lacks task");
+  }
+  if (value.on_behalf_of === undefined) {
+    throw new LicenseError("chain_incomplete", "act hop lacks on_behalf_of");
+  }
+  const onBehalfOf = parseOnBehalfOf(value.on_behalf_of, depth + 1);
+  return {
+    sub,
+    instance: parseInstance(value.instance, "act.instance"),
+    name: parseRoleName(value.name, "act.name"),
+    task: parseTask(value.task, "act.task"),
+    on_behalf_of: onBehalfOf,
+  };
+}
+
+function parseOnBehalfOf(value: unknown, depth: number): ActClaim | Principal {
+  if (!isRecord(value)) throw new LicenseError("chain_incomplete", "act hop lacks on_behalf_of");
+  if (value.type === "user" || value.type === "org") return parsePrincipal(value, "on_behalf_of");
+  if (typeof value.sub === "string") return parseAct(value, depth);
+  throw new LicenseError("chain_incomplete", "act chain does not terminate at the license principal");
+}
+
+function canonicalizePrincipal(principal: Principal): string {
+  return canonicalize(principal);
+}
+
+function assertTasksNarrow(act: ActClaim): void {
+  if (isPrincipal(act.on_behalf_of)) return;
+  if (!taskNarrows(act.on_behalf_of.task, act.task)) {
+    throw new LicenseError(
+      "task_widened",
+      `act task of ${act.name} is not a narrowing of ${act.on_behalf_of.name}`,
+    );
+  }
+  assertTasksNarrow(act.on_behalf_of);
 }
 
 /** Outermost actor first, then prior actors, original actor last. */
 export function actorIds(act: ActClaim): string[] {
-  const ids = [act.sub];
-  if (act.act) ids.push(...actorIds(act.act));
-  return ids;
+  return agentHops(act).map((hop) => hop.sub);
 }
 
 /** User, then original actor, then each later delegate. The last id is current. */
@@ -199,7 +289,21 @@ function assertTimes(iat: number, exp: number, nbf?: number): void {
 export function parseUserRequestClaims(payload: Record<string, unknown>): UserRequestClaims {
   assertExactKeys(
     payload,
-    ["iss", "sub", "aud", "iat", "exp", "jti", "agent", "mandate", "authorization_details"],
+    [
+      "iss",
+      "sub",
+      "aud",
+      "iat",
+      "exp",
+      "jti",
+      "agent",
+      "mandate",
+      "authorization_details",
+      "principal",
+      "name",
+      "instance",
+      "task",
+    ],
     "user request",
   );
   const iss = expectString(payload.iss, "iss");
@@ -221,6 +325,13 @@ export function parseUserRequestClaims(payload: Record<string, unknown>): UserRe
     mandate: parseMandate(payload.mandate),
     authorization_details: parseAuthorizationDetails(payload.authorization_details),
   };
+  if (payload.principal !== undefined) claims.principal = parsePrincipal(payload.principal, "principal");
+  if (payload.name !== undefined) claims.name = parseRoleName(payload.name, "name");
+  if (payload.instance !== undefined) claims.instance = parseInstance(payload.instance, "instance");
+  if (payload.task !== undefined) claims.task = parseTask(payload.task, "task");
+  if (claims.principal && claims.principal.user !== claims.sub) {
+    throw new LicenseError("chain_incomplete", "act chain does not terminate at the license principal");
+  }
   assertTimes(claims.iat, claims.exp);
   assertMandateMatchesScope(claims.mandate, claims.authorization_details[0]!);
   return claims;
@@ -238,6 +349,7 @@ export function parseLicenseClaims(payload: Record<string, unknown>): LicenseCla
       "iat",
       "jti",
       "agent",
+      "principal",
       "act",
       "mandate",
       "authorization_details",
@@ -253,6 +365,10 @@ export function parseLicenseClaims(payload: Record<string, unknown>): LicenseCla
   if (!USER.test(sub)) throw new LicenseError("malformed", "license sub must be a user id");
   const agent = expectString(payload.agent, "agent");
   if (!isProfileSpiffe(agent)) throw new LicenseError("bad_agent_id", "license agent is not a profile SPIFFE id");
+  if (payload.principal === undefined) {
+    throw new LicenseError("chain_incomplete", "act chain does not terminate at the license principal");
+  }
+  const principal = parsePrincipal(payload.principal, "principal");
   const act = parseAct(payload.act);
   const ids = actorIds(act);
   if (ids[0] !== agent) throw new LicenseError("act_chain", "outermost act.sub must be the licensed agent");
@@ -262,8 +378,12 @@ export function parseLicenseClaims(payload: Record<string, unknown>): LicenseCla
     throw new LicenseError("act_chain", "an attenuated license needs a prior actor in act");
   }
   if (!parent && ids.length !== 1) {
-    throw new LicenseError("act_chain", "a root license must not nest act");
+    throw new LicenseError("act_chain", "a root license must not include a prior actor");
   }
+  if (principal.user !== sub || canonicalizePrincipal(terminalPrincipal(act)) !== canonicalizePrincipal(principal)) {
+    throw new LicenseError("chain_incomplete", "act chain does not terminate at the license principal");
+  }
+  assertTasksNarrow(act);
   const claims: LicenseClaims = {
     iss: ISSUER_ID,
     sub,
@@ -273,6 +393,7 @@ export function parseLicenseClaims(payload: Record<string, unknown>): LicenseCla
     iat: expectInt(payload.iat, "iat"),
     jti: expectId(payload.jti, "jti"),
     agent,
+    principal,
     act,
     mandate: parseMandate(payload.mandate),
     authorization_details: parseAuthorizationDetails(payload.authorization_details),
@@ -304,6 +425,7 @@ export function parseJustificationClaims(payload: Record<string, unknown>): Just
       "action",
       "location",
       "why",
+      "statement",
       "goal",
     ],
     "justification",
@@ -325,6 +447,13 @@ export function parseJustificationClaims(payload: Record<string, unknown>): Just
   if (why.length < 12 || why.length > 500) {
     throw new LicenseError("malformed", "justification why must be 12 to 500 characters");
   }
+  const statement = payload.statement;
+  if (typeof statement !== "string" || statement.length === 0) {
+    throw new LicenseError("identity_mismatch", "justification statement does not match the signed delegation chain");
+  }
+  if (statement.length > STATEMENT_MAX) {
+    throw new LicenseError("malformed", "justification statement is too long");
+  }
   const claims: JustificationClaims = {
     iss,
     sub,
@@ -340,6 +469,7 @@ export function parseJustificationClaims(payload: Record<string, unknown>): Just
     action: parseAction(payload.action),
     location: parseLocation(payload.location),
     why,
+    statement,
   };
   if (!REQ_HASH.test(claims.req_hash)) throw new LicenseError("malformed", "justification req_hash is invalid");
   if (payload.goal !== undefined) {

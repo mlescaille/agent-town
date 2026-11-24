@@ -71,6 +71,9 @@ export async function startIssuer(options: { home: string; port?: number; host?:
         childAgent: body.agent,
         authorizationDetails: body.authorization_details,
         exp: body.exp,
+        name: typeof body.name === "string" ? body.name : undefined,
+        instance: typeof body.instance === "string" ? body.instance : undefined,
+        task: typeof body.task === "string" ? body.task : undefined,
       });
       sendJson(res, 200, attenuated);
       return;

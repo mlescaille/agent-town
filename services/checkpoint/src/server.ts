@@ -112,6 +112,7 @@ async function handleInvoke(
     location,
     policy_decision: combined.policy_decision,
     why: assessment.why,
+    statement: assessment.statement,
   };
   const logged = await fetch(`${options.logUrl}/v1/entries`, {
     method: "POST",

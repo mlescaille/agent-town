@@ -3,6 +3,7 @@ import { LicenseError } from "./errors.js";
 import { signJws } from "./jws.js";
 import { newId } from "./keys.js";
 import { verifyLicense } from "./license.js";
+import { defaultChildTask, defaultIdentity, taskNarrows } from "./statement.js";
 import type { AuthorizationDetail, LicenseClaims, OkpPrivateJwk, OkpPublicJwk } from "./types.js";
 import { actorIds, parseAuthorizationDetails, parseLicenseClaims } from "./validate.js";
 
@@ -16,6 +17,12 @@ export interface AttenuateInput {
   exp: number;
   now?: number;
   jti?: string;
+  /** Human-readable role of the child hop. Defaults to the agent's name. */
+  name?: string;
+  /** Concrete run id of the child hop, for example `subagent-123`. */
+  instance?: string;
+  /** Delegated task. Must narrow the parent hop's task. */
+  task?: string;
 }
 
 function asSet(values: string[]): Set<string> {
@@ -28,9 +35,9 @@ function isSubset(child: string[], parent: string[]): boolean {
 }
 
 /**
- * Mint a license for a sub-agent. Scope, budget, and expiry can only shrink.
- * The mandate, user, transaction id, and request hash are copied. The `act`
- * chain gains the child as the current actor.
+ * Mint a license for a sub-agent. Scope, budget, expiry, and task can only shrink.
+ * The mandate, user, principal, transaction id, and request hash are copied.
+ * The child hop's `on_behalf_of` is the parent chain.
  */
 export function attenuateLicense(input: AttenuateInput): { license: string; claims: LicenseClaims } {
   const now = input.now ?? Math.floor(Date.now() / 1000);
@@ -48,6 +55,13 @@ export function attenuateLicense(input: AttenuateInput): { license: string; clai
   if (!Number.isSafeInteger(input.exp)) throw new LicenseError("malformed", "exp must be an integer");
   const nbf = Math.max(parent.nbf, now);
   if (input.exp <= nbf) throw new LicenseError("expired", "attenuated license expiry is not in the future");
+  const identity = defaultIdentity(input.childAgent, parent.mandate);
+  const name = input.name ?? identity.name;
+  const instance = input.instance ?? identity.instance;
+  const task = input.task ?? defaultChildTask(parent.act.task, name, instance);
+  if (!taskNarrows(parent.act.task, task)) {
+    throw new LicenseError("task_widened", `act task of ${name} is not a narrowing of ${parent.act.name}`);
+  }
   const claims: LicenseClaims = {
     iss: parent.iss,
     sub: parent.sub,
@@ -57,7 +71,14 @@ export function attenuateLicense(input: AttenuateInput): { license: string; clai
     exp: input.exp,
     jti: input.jti ?? newId("lic_"),
     agent: input.childAgent,
-    act: { sub: input.childAgent, act: parent.act },
+    principal: parent.principal,
+    act: {
+      sub: input.childAgent,
+      instance,
+      name,
+      task,
+      on_behalf_of: parent.act,
+    },
     mandate: parent.mandate,
     authorization_details: [detail!],
     txn: parent.txn,

@@ -3,7 +3,8 @@ import { LicenseError } from "./errors.js";
 import { signJws, verifyJws } from "./jws.js";
 import { newId, publicJwk } from "./keys.js";
 import { requestHash, verifyUserRequest } from "./request.js";
-import type { LicenseClaims, OkpPrivateJwk, OkpPublicJwk } from "./types.js";
+import { defaultIdentity } from "./statement.js";
+import type { LicenseClaims, OkpPrivateJwk, OkpPublicJwk, Principal } from "./types.js";
 import { checkTimeWindow, parseLicenseClaims } from "./validate.js";
 
 export interface IssueLicenseInput {
@@ -33,6 +34,8 @@ export function issueLicense(input: IssueLicenseInput): { license: string; claim
   }
   const exp = Math.min(request.exp, now + ttl);
   if (exp <= now) throw new LicenseError("expired", "user request leaves no validity window");
+  const identity = defaultIdentity(request.agent, request.mandate);
+  const principal: Principal = request.principal ?? { type: "user", user: request.sub };
   const claims: LicenseClaims = {
     iss: ISSUER_ID,
     sub: request.sub,
@@ -42,7 +45,14 @@ export function issueLicense(input: IssueLicenseInput): { license: string; claim
     exp,
     jti: input.jti ?? newId("lic_"),
     agent: request.agent,
-    act: { sub: request.agent },
+    principal,
+    act: {
+      sub: request.agent,
+      instance: request.instance ?? identity.instance,
+      name: request.name ?? identity.name,
+      task: request.task ?? identity.task,
+      on_behalf_of: principal,
+    },
     mandate: request.mandate,
     authorization_details: request.authorization_details,
     txn: request.jti,

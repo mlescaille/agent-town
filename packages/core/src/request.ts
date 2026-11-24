@@ -15,6 +15,10 @@ export interface CreateUserRequestInput {
   ttlSeconds: number;
   now?: number;
   jti?: string;
+  principal?: UserRequestClaims["principal"];
+  name?: string;
+  instance?: string;
+  task?: string;
 }
 
 /** Sign the originating user request. The license binds to this exact compact JWS. */
@@ -23,7 +27,7 @@ export function createUserRequest(input: CreateUserRequestInput): string {
   if (!Number.isSafeInteger(input.ttlSeconds) || input.ttlSeconds < 1) {
     throw new LicenseError("malformed", "ttlSeconds must be a positive integer");
   }
-  const claims = parseUserRequestClaims({
+  const payload: Record<string, unknown> = {
     iss: input.userId,
     sub: input.userId,
     aud: ISSUER_ID,
@@ -33,7 +37,12 @@ export function createUserRequest(input: CreateUserRequestInput): string {
     agent: input.agent,
     mandate: input.mandate,
     authorization_details: input.authorizationDetails,
-  });
+  };
+  if (input.principal !== undefined) payload.principal = input.principal;
+  if (input.name !== undefined) payload.name = input.name;
+  if (input.instance !== undefined) payload.instance = input.instance;
+  if (input.task !== undefined) payload.task = input.task;
+  const claims = parseUserRequestClaims(payload);
   return signJws(claims as unknown as Record<string, unknown>, input.userKey, REQUEST_TYP);
 }
 

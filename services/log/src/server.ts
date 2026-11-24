@@ -43,6 +43,7 @@ const FIELDS = [
   "location",
   "policy_decision",
   "why",
+  "statement",
 ] as const;
 
 function parseIncoming(value: unknown): Omit<DecisionRecord, "index" | "v"> {

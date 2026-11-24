@@ -40,6 +40,17 @@ export type { AttenuateInput } from "./attenuate.js";
 export { assessPresentation, hashPresentedJustification } from "./assess.js";
 export type { AssessInput } from "./assess.js";
 export {
+  agentHops,
+  canonicalStatement,
+  defaultChildTask,
+  defaultIdentity,
+  delegationSentence,
+  formatPrincipal,
+  isPrincipal,
+  taskNarrows,
+  terminalPrincipal,
+} from "./statement.js";
+export {
   actorIds,
   delegationChain,
   effectOf,
@@ -68,6 +79,8 @@ export { closeServer, createHttpServer, listen, readBody, readJson, requestUrl, 
 export type {
   ActClaim,
   AgentInitiatedMandate,
+  OrgPrincipal,
+  Principal,
   Assessment,
   AuthorizationDetail,
   Budget,
@@ -83,5 +96,6 @@ export type {
   OkpPublicJwk,
   SignedTreeHeadClaims,
   UserGoalMandate,
+  UserPrincipal,
   UserRequestClaims,
 } from "./types.js";
