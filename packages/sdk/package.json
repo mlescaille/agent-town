@@ -1,0 +1,20 @@
+{
+  "name": "@agent-license/sdk",
+  "version": "0.1.0",
+  "description": "licensed(fetch) attaches an agent license and a signed justification.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@agent-license/core": "workspace:*"
+  }
+}

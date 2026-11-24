@@ -1,0 +1,27 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const ID_BLOCK = /@id\("([^"]+)"\)\s*([\s\S]*?)(?=@id\("|$)/g;
+
+/** Split the annotated policy file into a Cedar policy map keyed by `@id`. */
+export function policiesFromText(text: string): Record<string, string> {
+  const policies: Record<string, string> = {};
+  for (const match of text.matchAll(ID_BLOCK)) {
+    const id = match[1];
+    const body = match[2]?.trim();
+    if (!id || !body) continue;
+    policies[id] = body;
+  }
+  if (Object.keys(policies).length === 0) {
+    throw new Error("policy file contains no @id blocks");
+  }
+  return policies;
+}
+
+export function defaultPolicyPath(): string {
+  return fileURLToPath(new URL("../../../policies/mandates.cedar", import.meta.url));
+}
+
+export function loadPolicies(path = defaultPolicyPath()): Record<string, string> {
+  return policiesFromText(readFileSync(path, "utf8"));
+}
