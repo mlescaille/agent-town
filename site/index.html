@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Agent License signs a mandate for an AI agent. A checkpoint outside the agent checks it, asks a Cedar policy over AuthZEN, and appends the decision to a Merkle log.">
+  <meta name="theme-color" content="#f3ecdf">
+  <title>Agent License</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/fraunces-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="mast wrap">
+    <div>
+      <h1 class="mark">Agent License</h1>
+      <p class="mark-sub">verifiable mandates for AI agents · prototype</p>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#speaking">Who</a>
+      <a href="#mandates">Mandates</a>
+      <a href="#check">Checkpoint</a>
+      <a href="#quickstart">Quickstart</a>
+      <a href="#format">Spec</a>
+      <a href="#next">Roadmap</a>
+    </nav>
+  </header>
+
+  <main id="content">
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <p class="kicker">Pull request <a href="https://github.com/mlescaille/agent-town/pull/1">#1</a> · not on main</p>
+        <figure class="sentence">
+          <blockquote cite="https://github.com/mlescaille/agent-town/pull/1">
+            <p>I am Researcher (subagent-123), acting on behalf of Planner (planner-1), on behalf of Office of A. Example, Attorney at Law (user:alice), requesting documents.search on documents:matter because The office needs the cited exhibit from the matter file.</p>
+          </blockquote>
+          <figcaption id="sentence-caption">
+            Printed by <code>pnpm demo</code> on branch <code>cursor/explicit-delegation-chain-dcd7</code>, the line <code>office subagent allow</code>. Main does not build this sentence. The license card decodes a different token, issued on main.
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="card-column">
+        <div class="switcher" role="radiogroup" aria-label="Sample license to decode">
+          <label>direct_request<input type="radio" name="license" value="direct_request"></label>
+          <label>user_goal<input type="radio" name="license" value="user_goal" checked></label>
+          <label>agent_initiated<input type="radio" name="license" value="agent_initiated"></label>
+          <label>attenuated child<input type="radio" name="license" value="attenuated"></label>
+        </div>
+        <article class="card" id="card" tabindex="-1" aria-labelledby="card-title">
+          <div class="card-head">
+            <div>
+              <p class="card-title" id="card-title">Agent license</p>
+              <p class="card-kicker"><span id="f-typ">agent-license+jwt</span> · <span id="f-alg">EdDSA</span></p>
+            </div>
+            <div class="seal pending" id="seal" data-state="pending">
+              <span class="seal-ring">Ed25519</span>
+              <span class="seal-state" id="seal-state">Checking</span>
+            </div>
+          </div>
+          <dl class="rows">
+            <div class="row">
+              <dt>License</dt>
+              <dd class="id" id="f-serial">lic_4e600ce0d4dacd347af5f5417ca45f0c</dd>
+            </div>
+            <div class="row">
+              <dt>Subject</dt>
+              <dd id="f-subject">user:alice</dd>
+            </div>
+            <div class="row">
+              <dt>Agent</dt>
+              <dd class="id" id="f-agent">spiffe://agent-license.example/agent/planner</dd>
+            </div>
+            <div class="row">
+              <dt>Mandate</dt>
+              <dd id="f-mandate">user_goal</dd>
+            </div>
+            <div class="row" id="f-goal-row">
+              <dt id="f-goal-label">Goal</dt>
+              <dd id="f-goal">Summarize the primary calendar</dd>
+            </div>
+            <div class="row">
+              <dt>Actions</dt>
+              <dd id="f-actions">calendar.create, calendar.read</dd>
+            </div>
+            <div class="row">
+              <dt>Locations</dt>
+              <dd id="f-locations">calendar:primary</dd>
+            </div>
+            <div class="row">
+              <dt>Budget</dt>
+              <dd id="f-budget">max_calls=10</dd>
+            </div>
+            <div class="row">
+              <dt>Expires</dt>
+              <dd id="f-expires">2026-11-24T18:52:46.000Z</dd>
+            </div>
+            <div class="row">
+              <dt>Transaction</dt>
+              <dd class="id" id="f-txn">req_cafa893b76aa30abd11435805d6a75cb</dd>
+            </div>
+            <div class="row">
+              <dt>Request hash</dt>
+              <dd class="id" id="f-hash">sha-256:GwrJng4c5HLZ7ZzAzqDwXK6G0AP17gz4oT6fGAI7O2g</dd>
+            </div>
+            <div class="row" id="f-parent-row" hidden>
+              <dt>Parent</dt>
+              <dd class="id" id="f-parent"></dd>
+            </div>
+            <div class="row">
+              <dt>Chain</dt>
+              <dd>
+                <ol class="chain" id="f-chain">
+                  <li>user:alice</li>
+                  <li>spiffe://agent-license.example/agent/planner</li>
+                </ol>
+              </dd>
+            </div>
+            <div class="row">
+              <dt>Issuer</dt>
+              <dd class="id" id="f-iss">https://issuer.agent-license.example</dd>
+            </div>
+            <div class="row">
+              <dt>Audience</dt>
+              <dd class="id" id="f-aud">https://checkpoint.agent-license.example</dd>
+            </div>
+            <div class="row">
+              <dt>Key id</dt>
+              <dd class="id" id="f-kid">1ZfAT43ijXQ5nYkIkDWb7BAa038s5rEqDRynaKTgHfI</dd>
+            </div>
+          </dl>
+          <p class="seal-note">The seal checks the Ed25519 signature against the issuer public key from this run. It does not apply the one-hour expiry. Issuer and checkpoint names are logical identifiers, not hosts.</p>
+          <details>
+            <summary>Compact JWS</summary>
+            <pre class="token" id="f-token"></pre>
+          </details>
+          <details>
+            <summary>Decoded payload</summary>
+            <pre class="payload" id="f-payload"></pre>
+          </details>
+          <details>
+            <summary>Issuer public key</summary>
+            <pre>{
+  "kty": "OKP",
+  "crv": "Ed25519",
+  "x": "2hT5he3MBQQS_5IqeHuA0iUR-jtySIfywVHMN9OZGmw",
+  "kid": "1ZfAT43ijXQ5nYkIkDWb7BAa038s5rEqDRynaKTgHfI",
+  "use": "sig"
+}</pre>
+          </details>
+        </article>
+        <p class="card-foot">Four tokens from one run on 24 Nov 2026: three issued licenses, and a child attenuated from the user_goal license. Private keys are not on this page.</p>
+      </div>
+      <div class="on-main">
+        <p>On main, <code>agentlicense inspect</code> prints the chain as identifiers. User first, presenting agent last. This is the chain from the attenuated calendar license, the card’s fourth sample. It is not the chain of the sentence above.</p>
+        <pre>chain
+  user:alice
+  spiffe://agent-license.example/agent/planner
+  spiffe://agent-license.example/agent/researcher</pre>
+      </div>
+    </section>
+
+    <section class="section" id="speaking">
+      <div class="wrap split">
+        <div>
+          <span class="num">01</span>
+          <h2>An agent has to say who it is</h2>
+          <p class="lede">Who is speaking, on whose behalf, and what it is about to do. An agent does not mint that authority. A separate issuer signs a license that names the agent, the user it acts for, how it was delegated, and what it may do.</p>
+          <p>At a checkpoint outside the agent, every call brings that license and a justification the agent signs for this call: why this call, on whose behalf, is the one being made. The justification lives at most 300 seconds. The checkpoint remembers its id and rejects a replay.</p>
+          <p>The checkpoint checks the signature, the lifetime, the scope, the delegation chain, and the mandate. It asks a Cedar policy over the <a href="https://openid.net/specs/authorization-api-1_0.html">OpenID AuthZEN 1.0</a> evaluation API. It appends the decision, allow or deny, to a tamper-evident log. It forwards the call only if the decision is allow.</p>
+          <p>This repository is a prototype of that flow. It is not a production trust service. The services bind to localhost and share a key directory.</p>
+        </div>
+        <ul class="marginalia">
+          <li>The issuer signs licenses. Agents never do.</li>
+          <li>Signatures are Ed25519 JWS. No other algorithm is accepted.</li>
+          <li>A license carries exactly one mandate.</li>
+          <li>A sub-agent can receive only a narrower license. Scope, budget, and expiry can shrink. They cannot grow, and the mandate type cannot change.</li>
+          <li>The chain is an <a href="https://www.rfc-editor.org/rfc/rfc8693">RFC 8693</a> <code>act</code> claim, at most eight agents, with no repeated id. The outermost actor is the agent presenting the license.</li>
+        </ul>
+      </div>
+      <div class="wrap">
+        <h3>What pull request #1 adds</h3>
+        <p>Not merged. Each hop gains a name, an instance, a task, and <code>on_behalf_of</code>. The chain ends at a principal, a user or a named principal for a user. The checkpoint rebuilds one sentence and stores it on the log. A justification that does not match is refused.</p>
+        <pre>ok   office subagent allow        I am Researcher (subagent-123), acting on behalf of Planner (planner-1), on behalf of Office of A. Example, Attorney at Law (user:alice), requesting documents.search on documents:matter because The office needs the cited exhibit from the matter file.
+ok   forged instance              deny identity_mismatch justification statement does not match the signed delegation chain
+ok   missing hop                  deny chain_incomplete act hop lacks on_behalf_of
+ok   widened task                 deny task_widened act task of Researcher is not a narrowing of Planner</pre>
+        <p class="card-foot">Those four lines are from <code>pnpm demo</code> on that branch. The codes <code>identity_mismatch</code>, <code>chain_incomplete</code>, and <code>task_widened</code> are not on main.</p>
+      </div>
+    </section>
+
+    <section class="section" id="mandates">
+      <div class="wrap">
+        <span class="num">02</span>
+        <h2>Three mandate types</h2>
+        <p>A license carries exactly one. The justification’s <code>basis</code> has to match it. A call inside the scope is still denied when the basis claims a different kind of instruction than the user signed.</p>
+
+        <article class="band">
+          <header>
+            <h3>direct_request</h3>
+            <button type="button" data-show-license="direct_request">Show this license</button>
+          </header>
+          <p>The user asked for one exact action and one location. The authorization detail contains only that pair. The checkpoint allows a call only when both match. The justification basis must be <code>user_request</code>. A goal on the justification is rejected.</p>
+          <p>The sample names <code>calendar.read</code> on <code>calendar:primary</code>, with <code>max_calls=1</code>.</p>
+        </article>
+
+        <article class="band">
+          <header>
+            <h3>user_goal</h3>
+            <button type="button" data-show-license="user_goal">Show this license</button>
+          </header>
+          <p>The user set a goal, one to 300 characters. The agent chooses calls inside the granted scope. The justification basis must be <code>user_goal</code>, and the goal text must equal the mandate. Claiming <code>user_request</code> is <code>justification_mismatch</code>: the user did not ask for that exact action.</p>
+          <p>The sample goal is “Summarize the primary calendar”, with <code>calendar.read</code> and <code>calendar.create</code> on <code>calendar:primary</code>, budget 10.</p>
+        </article>
+
+        <article class="band">
+          <header>
+            <h3>agent_initiated</h3>
+            <button type="button" data-show-license="agent_initiated">Show this license</button>
+          </header>
+          <p>The user signed a grant that lets the agent act without a goal. The scope has to sit inside a fixed ceiling, and <code>max_calls</code> has to be present and at most 5. The justification basis must be <code>agent</code>. A goal is a mismatch. Cedar’s <code>forbid-agent-initiated-writes</code> forbids a write. The effect comes from the action name: <code>read</code>, <code>list</code>, and <code>get</code> are reads. Every other verb is a write.</p>
+          <table class="ceiling">
+            <caption class="sr">Ceiling for an agent_initiated license</caption>
+            <thead>
+              <tr><th scope="col">Action</th><th scope="col">Location</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>catalog.list</td><td>catalog:public</td></tr>
+              <tr><td>clock.read</td><td>clock:local</td></tr>
+              <tr><td>memory.read</td><td>memory:self</td></tr>
+            </tbody>
+          </table>
+          <p>The sample is inside that ceiling: <code>clock.read</code> on <code>clock:local</code>, <code>max_calls=3</code>.</p>
+        </article>
+
+        <article class="band">
+          <header>
+            <h3>Attenuation, not a fourth mandate</h3>
+            <button type="button" data-show-license="attenuated">Show the child</button>
+          </header>
+          <p>The issuer verifies the parent and signs the child. The parent agent does not. The child copies the user, the mandate, the transaction id, and the request hash. It sets <code>parent_jti</code> and nests <code>act</code>. Every child action and location is already in the parent. The budget cannot rise, and the expiry cannot move later. At least one of those has to be strictly narrower. Adding <code>mail.send</code> is <code>scope_widen</code>.</p>
+          <p>The sample child keeps the calendar goal, drops <code>calendar.create</code>, lowers the budget from 10 to 3, and shortens the lifetime. The presenter is <code>researcher</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="check">
+      <div class="wrap">
+        <span class="num">03</span>
+        <h2>How a check works</h2>
+        <p>License, then checkpoint, then policy, then the log. The tool is called only after an allow is written down.</p>
+        <ol class="flow">
+          <li>
+            <span class="step-no">01 License</span>
+            <h3>The call brings a license</h3>
+            <p>The caller posts the tool call to <code>/v1/invoke</code> with headers <code>Agent-License</code> and <code>Agent-Justification</code>. <code>licensed(fetch)</code> attaches both. The URL you pass it is not contacted.</p>
+          </li>
+          <li>
+            <span class="step-no">02 Checkpoint</span>
+            <h3>Outside the agent</h3>
+            <p>The checkpoint verifies the license and the justification, including scope, chain, mandate, and budget. A structural failure is reported even if Cedar would also have denied. No license is <code>missing_license</code>.</p>
+          </li>
+          <li>
+            <span class="step-no">03 Policy</span>
+            <h3>AuthZEN, then Cedar</h3>
+            <p><code>permit-bound-call</code> permits a call only when the checkpoint’s booleans are all true. <code>forbid-direct-request-inexact</code> forbids an inexact direct request. The default is deny. If the policy decision point cannot be reached, the checkpoint fails closed.</p>
+          </li>
+          <li>
+            <span class="step-no">04 Log</span>
+            <h3>Then the tool, or not</h3>
+            <p>Allow or deny, the decision is appended first. The log is an <a href="https://www.rfc-editor.org/rfc/rfc9162">RFC 9162</a> Merkle tree with SHA-256, and it signs each tree head. Only an allow is forwarded.</p>
+          </li>
+        </ol>
+
+        <div class="bench">
+          <div class="bench-top">
+            <div class="stamp" id="stamp" data-kind="allow">
+              <p class="stamp-word" id="stamp-word">Allow</p>
+              <p class="stamp-code" id="stamp-code">allow</p>
+            </div>
+            <p class="stamp-caption" id="stamp-caption">HTTP 200. The checkpoint forwarded the call. The demo tool answered completed.</p>
+          </div>
+          <p class="sr" id="stamp-live" aria-live="polite"></p>
+          <div class="picks" role="group" aria-label="Captured call to stamp">
+            <button type="button" data-pick="allow" aria-pressed="true">calendar.read on calendar:primary</button>
+            <button type="button" data-pick="deny" aria-pressed="false">mail.send on mail:outbox</button>
+          </div>
+          <p>Both calls use the user_goal license on the card. <code>agentlicense check</code> is a dry run: it does not start the services or write the log. The HTTP body and the leaf are a second capture, with the services running and the same license presented through <code>licensed(fetch)</code>. Each presentation signs a new justification.</p>
+
+          <div data-panel="allow">
+            <h3>agentlicense check</h3>
+            <pre>decision  allow
+code      allow
+mandate   user_goal
+action    calendar.read
+location  calendar:primary
+policy    allow
+policies  permit-bound-call
+reason    signature, lifetime, scope, mandate, and originating request all match</pre>
+            <h3>Checkpoint response · HTTP 200</h3>
+            <pre>{
+  "decision": "allow",
+  "code": "allow",
+  "reason": "signature, lifetime, scope, mandate, and originating request all match",
+  "log_index": 0,
+  "policy_decision": "allow",
+  "determining_policies": [
+    "permit-bound-call"
+  ],
+  "upstream": {
+    "ok": true,
+    "result": "completed",
+    "echo": {
+      "action": "calendar.read",
+      "location": "calendar:primary",
+      "input": null
+    }
+  }
+}</pre>
+            <h3>Log leaf 0</h3>
+            <pre>{
+  "action": "calendar.read",
+  "agent": "spiffe://agent-license.example/agent/planner",
+  "code": "allow",
+  "decision": "allow",
+  "index": 0,
+  "justification_hash": "sha-256:2Ss24RtfcNuNaIauO0DRWgEjWi037u9wAvxM37GcPYA",
+  "justification_jti": "jus_a875b0f9f20cb15334818505153a4f5e",
+  "license_jti": "lic_4e600ce0d4dacd347af5f5417ca45f0c",
+  "location": "calendar:primary",
+  "mandate": "user_goal",
+  "policy_decision": "allow",
+  "reason": "signature, lifetime, scope, mandate, and originating request all match",
+  "sub": "user:alice",
+  "time": "2026-11-24T17:54:00.159Z",
+  "v": 1,
+  "why": "Reading today's events is how the summary gets its facts."
+}</pre>
+          </div>
+          <div data-panel="deny" hidden>
+            <h3>agentlicense check</h3>
+            <pre>decision  deny
+code      over_scope
+mandate   user_goal
+action    mail.send
+location  mail:outbox
+policy    deny
+policies  (none)
+reason    the action is outside the license scope</pre>
+            <h3>Checkpoint response · HTTP 403</h3>
+            <pre>{
+  "decision": "deny",
+  "code": "over_scope",
+  "reason": "the action is outside the license scope",
+  "log_index": 1,
+  "policy_decision": "deny",
+  "determining_policies": []
+}</pre>
+            <h3>Log leaf 1</h3>
+            <pre>{
+  "action": "mail.send",
+  "agent": "spiffe://agent-license.example/agent/planner",
+  "code": "over_scope",
+  "decision": "deny",
+  "index": 1,
+  "justification_hash": "sha-256:V5AftfqRacV1Wp8qaf78yg9q9tLWOOYsZl7W3MXSuNk",
+  "justification_jti": "jus_ca8b6825f8d5fc5b7f27515adbd9238c",
+  "license_jti": "lic_4e600ce0d4dacd347af5f5417ca45f0c",
+  "location": "mail:outbox",
+  "mandate": "user_goal",
+  "policy_decision": "deny",
+  "reason": "the action is outside the license scope",
+  "sub": "user:alice",
+  "time": "2026-11-24T17:54:00.171Z",
+  "v": 1,
+  "why": "Sending mail is outside the calendar summary."
+}</pre>
+          </div>
+
+          <h3>Signed tree head after both calls</h3>
+          <pre>{
+  "tree_size": 2,
+  "root_hash": "DtkG9WsfYK8-yIx2fXjKHuNXiESnPyOidi5M50dt0dQ",
+  "log_id": "q-xK4-TM-WQNry67lkFEVq8uhj9qIBNvKrWgQwNdaXM",
+  "sth": "eyJhbGciOiJFZERTQSIsInR5cCI6ImFnZW50LWxvZy1zdGgrand0Iiwia2lkIjoicS14SzQtVE0tV1FOcnk2N2xrRkVWcTh1aGo5cUlCTnZLcldnUXdOZGFYTSJ9.eyJsb2dfaWQiOiJxLXhLNC1UTS1XUU5yeTY3bGtGRVZxOHVoajlxSUJOdktyV2dRd05kYVhNIiwicm9vdF9oYXNoIjoiRHRrRzlXc2ZZSzgteUl4MmZYaktIdU5YaUVTblB5T2lkaTVNNTBkdDBkUSIsInRpbWVzdGFtcCI6IjIwMjYtMTEtMjRUMTc6NTQ6MDAuMTcxWiIsInRyZWVfc2l6ZSI6MiwidiI6MX0.gtPV7TDeKXxn5DGrhULDzPOaEB5YP5Eldm-vPAK7zUuHNnLaKTm3tk7611tM1d39jmsno3rhLivQgBthrYhgAw"
+}</pre>
+          <h3>Inclusion proof for leaf 0 at tree size 2</h3>
+          <pre>{
+  "leaf_index": 0,
+  "tree_size": 2,
+  "leaf_hash": "14qN2LoXB2JNlMLDcG7A35wtBL2uwfKc87lMyhYd8ro",
+  "root_hash": "DtkG9WsfYK8-yIx2fXjKHuNXiESnPyOidi5M50dt0dQ",
+  "inclusion_path": [
+    "bo_l3ykejsbOu3iSr2Svau-PuikmExo9Odv3kfZpbrM"
+  ]
+}</pre>
+          <p class="card-foot">The leaf JSON is shown with line breaks. On the wire it is canonical JSON: sorted keys, no insignificant whitespace. Node hashes in the proof are unpadded base64url.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="quickstart">
+      <div class="wrap">
+        <span class="num">04</span>
+        <h2>Run it</h2>
+        <p>Node.js 22 or newer and pnpm 9. The commands are the ones in the repository README. This capture added <code>--home</code> with a temporary directory, so the keys were not written into the tree. Decisions, ids, and timestamps below are the exact output. <code>keys init</code> is the line that includes that path.</p>
+
+        <ol class="steps">
+          <li>
+            <h3>Install, build, and write keys</h3>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-keys">Copy</button></div>
+              <pre id="cmd-keys">pnpm install
+pnpm build
+pnpm exec agentlicense keys init</pre>
+            </div>
+            <p class="out-label">Printed by this run</p>
+            <pre>wrote issuer, log, user:alice, planner, and researcher keys to /tmp/tmp.ohpLXjfddV</pre>
+          </li>
+          <li>
+            <h3>Issue a user_goal license</h3>
+            <p>The user request is signed with the user’s key. The issuer key then signs the license. Stderr names the license. Stdout is the compact JWS, which is the user_goal token in the card.</p>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-issue">Copy</button></div>
+              <pre id="cmd-issue">pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate user_goal \
+  --goal "Summarize the primary calendar" \
+  --actions calendar.read,calendar.create \
+  --locations calendar:primary \
+  --budget 10 \
+  --ttl 3600 &gt; license.jwt</pre>
+            </div>
+            <p class="out-label">Printed by this run</p>
+            <pre>issued lic_4e600ce0d4dacd347af5f5417ca45f0c mandate=user_goal agent=spiffe://agent-license.example/agent/planner exp=1795546366</pre>
+          </li>
+          <li>
+            <h3>Inspect the chain</h3>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-inspect">Copy</button></div>
+              <pre id="cmd-inspect">pnpm exec agentlicense inspect --home .agent-license "$(cat license.jwt)"</pre>
+            </div>
+            <p class="out-label">Printed by this run</p>
+            <pre>license  lic_4e600ce0d4dacd347af5f5417ca45f0c
+subject  user:alice
+agent    spiffe://agent-license.example/agent/planner
+mandate  user_goal
+goal     Summarize the primary calendar
+txn      req_cafa893b76aa30abd11435805d6a75cb
+req_hash sha-256:GwrJng4c5HLZ7ZzAzqDwXK6G0AP17gz4oT6fGAI7O2g
+expires  2026-11-24T18:52:46.000Z
+actions  calendar.create, calendar.read
+locations calendar:primary
+budget   max_calls=10
+chain
+  user:alice
+  spiffe://agent-license.example/agent/planner
+signature valid</pre>
+          </li>
+          <li>
+            <h3>Dry-run a call</h3>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-allow">Copy</button></div>
+              <pre id="cmd-allow">pnpm exec agentlicense check \
+  --license "$(cat license.jwt)" \
+  --action calendar.read \
+  --location calendar:primary \
+  --why "Reading today's events is how the summary gets its facts."</pre>
+            </div>
+            <p class="out-label">Printed by this run</p>
+            <pre>decision  allow
+code      allow
+mandate   user_goal
+action    calendar.read
+location  calendar:primary
+policy    allow
+policies  permit-bound-call
+reason    signature, lifetime, scope, mandate, and originating request all match</pre>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-deny">Copy</button></div>
+              <pre id="cmd-deny">pnpm exec agentlicense check \
+  --license "$(cat license.jwt)" \
+  --action mail.send \
+  --location mail:outbox \
+  --why "Sending mail is outside the calendar summary."</pre>
+            </div>
+            <p class="out-label">Printed by this run</p>
+            <pre>decision  deny
+code      over_scope
+mandate   user_goal
+action    mail.send
+location  mail:outbox
+policy    deny
+policies  (none)
+reason    the action is outside the license scope</pre>
+          </li>
+          <li>
+            <h3>Hand a narrower license to a sub-agent</h3>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-attenuate">Copy</button></div>
+              <pre id="cmd-attenuate">pnpm exec agentlicense attenuate \
+  --parent "$(cat license.jwt)" \
+  --agent researcher \
+  --actions calendar.read \
+  --locations calendar:primary \
+  --budget 3 \
+  --ttl 600 &gt; child.jwt</pre>
+            </div>
+            <p class="out-label">Printed by this run</p>
+            <pre>attenuated lic_d40474c58025b60f1d32fd429fa40838 agent=spiffe://agent-license.example/agent/researcher exp=1795543368</pre>
+            <pre>license  lic_d40474c58025b60f1d32fd429fa40838
+subject  user:alice
+agent    spiffe://agent-license.example/agent/researcher
+mandate  user_goal
+goal     Summarize the primary calendar
+txn      req_cafa893b76aa30abd11435805d6a75cb
+req_hash sha-256:GwrJng4c5HLZ7ZzAzqDwXK6G0AP17gz4oT6fGAI7O2g
+expires  2026-11-24T18:02:48.000Z
+actions  calendar.read
+locations calendar:primary
+budget   max_calls=3
+parent   lic_4e600ce0d4dacd347af5f5417ca45f0c
+chain
+  user:alice
+  spiffe://agent-license.example/agent/planner
+  spiffe://agent-license.example/agent/researcher
+signature valid</pre>
+            <p>The child can still read the calendar. Creating an event was dropped, so that call is <code>over_scope</code>.</p>
+            <pre>decision  allow
+code      allow
+mandate   user_goal
+action    calendar.read
+location  calendar:primary
+policy    allow
+policies  permit-bound-call
+reason    signature, lifetime, scope, mandate, and originating request all match</pre>
+            <pre>decision  deny
+code      over_scope
+mandate   user_goal
+action    calendar.create
+location  calendar:primary
+policy    deny
+policies  (none)
+reason    the action is outside the license scope</pre>
+          </li>
+          <li>
+            <h3>The other two mandates, from the same run</h3>
+            <pre>issued lic_7a9c16a0ec9530665fbfd78db017954e mandate=direct_request agent=spiffe://agent-license.example/agent/planner exp=1795546365</pre>
+            <pre>license  lic_7a9c16a0ec9530665fbfd78db017954e
+subject  user:alice
+agent    spiffe://agent-license.example/agent/planner
+mandate  direct_request
+action   calendar.read
+location calendar:primary
+txn      req_a6cef88a913ce12cd8f120c6691a8c7c
+req_hash sha-256:wWa-WhbX8V_Aa1fCkfG8cDQRNBttHq_V19__Jh_2-WA
+expires  2026-11-24T18:52:45.000Z
+actions  calendar.read
+locations calendar:primary
+budget   max_calls=1
+chain
+  user:alice
+  spiffe://agent-license.example/agent/planner
+signature valid</pre>
+            <pre>issued lic_6d968bd6b1867e8c9ac9765cb2467de8 mandate=agent_initiated agent=spiffe://agent-license.example/agent/planner exp=1795546366</pre>
+            <pre>license  lic_6d968bd6b1867e8c9ac9765cb2467de8
+subject  user:alice
+agent    spiffe://agent-license.example/agent/planner
+mandate  agent_initiated
+txn      req_6cd2f0f9b42e4cc2d394e320bcb87041
+req_hash sha-256:ine3BSWs4kLyQmd_IbKAU1wR98ujrvsmWW31Mi_1hdw
+expires  2026-11-24T18:52:46.000Z
+actions  clock.read
+locations clock:local
+budget   max_calls=3
+chain
+  user:alice
+  spiffe://agent-license.example/agent/planner
+signature valid</pre>
+          </li>
+          <li>
+            <h3>Start the services, or run the demo</h3>
+            <p><code>agentlicense dev</code> starts the issuer, checkpoint, Cedar PDP, Merkle log, and a demo tool on <code>127.0.0.1</code> ports <code>43121</code> through <code>43125</code>. <code>agentlicense log verify --url http://127.0.0.1:43124</code> replays that log. The scripted demo uses ephemeral ports and exercises the same services.</p>
+            <div class="block">
+              <div class="block-bar"><span>Command</span><button type="button" data-copy="cmd-demo">Copy</button></div>
+              <pre id="cmd-demo">pnpm demo</pre>
+            </div>
+            <p class="out-label">Printed by this run. Ports change every time. The pnpm runner’s two prefix lines are omitted.</p>
+            <div class="demo"><pre>agent-license demo
+
+issuer      http://127.0.0.1:44463
+checkpoint  http://127.0.0.1:46787
+pdp         http://127.0.0.1:46263
+log         http://127.0.0.1:37257
+
+ok   direct_request allow         allow allow signature, lifetime, scope, mandate, and originating request all match
+ok   user_goal allow              allow allow signature, lifetime, scope, mandate, and originating request all match
+ok   agent_initiated allow        allow allow signature, lifetime, scope, mandate, and originating request all match
+ok   over_scope deny              deny over_scope the action is outside the license scope
+ok   justification mismatch       deny justification_mismatch justification basis does not match the license mandate
+ok   missing license              deny missing_license the call did not present a license
+ok   attenuate to researcher      user:alice -&gt; spiffe://agent-license.example/agent/planner -&gt; spiffe://agent-license.example/agent/researcher
+ok   reject widened scope         scope_widen
+ok   sub-agent allow              allow allow signature, lifetime, scope, mandate, and originating request all match
+ok   sub-agent over scope         deny over_scope the action is outside the license scope
+ok   log replay                   entries=8 inclusion=8 consistency=8 tamper_caught=true root=x0D6wIMvndqDr_Ya
+
+demo: ok</pre></div>
+            <p>The demo issues all three mandate types, allows an in-scope call for each, denies an over-scope call, denies a mismatched justification, denies a call with no license, attenuates planner to researcher, rejects an attempt to add <code>mail.send</code>, allows the narrowed call, denies a call the child dropped, and replays the log. A flipped leaf fails verification. The last line is <code>demo: ok</code>.</p>
+          </li>
+          <li>
+            <h3>From the SDK</h3>
+            <p><code>licensed(fetch)</code> returns a function with the fetch signature. It posts the JSON tool call to the checkpoint and sets <code>Agent-License</code> and <code>Agent-Justification</code>.</p>
+            <pre>import { licensed } from "@agent-license/sdk";
+
+const call = licensed(fetch, {
+  license,
+  agentPrivateKey,
+  checkpoint: "http://127.0.0.1:43122",
+  why: "Reading the calendar is how the summary is produced.",
+  userRequest,
+});
+
+const response = await call("http://tool.invalid/ignored", {
+  method: "POST",
+  body: JSON.stringify({
+    action: "calendar.read",
+    resource: { type: "calendar", id: "primary" },
+  }),
+});</pre>
+          </li>
+        </ol>
+
+        <details class="help">
+          <summary>agentlicense --help, from this run</summary>
+          <pre>agentlicense — verifiable mandates for AI agents
+
+  keys init [--home dir]
+  issue --user &lt;name&gt; --agent &lt;name&gt; --mandate &lt;direct_request|user_goal|agent_initiated&gt;
+        [--goal text] [--action name --location type:id]
+        [--actions a,b] [--locations t:id,t:id] [--budget n] [--ttl seconds]
+  inspect &lt;license&gt; [--home dir]
+  attenuate --parent &lt;license&gt; --agent &lt;name&gt; [--actions a,b] [--locations t:id]
+        [--budget n] [--ttl seconds]
+  check --license &lt;license&gt; --action &lt;name&gt; --location &lt;type:id&gt; --why &lt;text&gt;
+        [--justification &lt;jws&gt;] [--user-request &lt;jws&gt;] [--basis &lt;basis&gt;]
+  log verify (--url http://127.0.0.1:43124 | --home dir)
+  dev [--home dir]
+
+The default key directory is ./.agent-license.
+issue and attenuate print a compact JWS on stdout.</pre>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" id="format">
+      <div class="wrap">
+        <span class="num">05</span>
+        <h2>The format, and the repository</h2>
+        <p>The byte-level rules for the license, the justification, and the log are the v1 profile. It borrows names from existing specifications. It is not itself an IETF standard.</p>
+        <ul class="links">
+          <li><a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">spec/LICENSE-FORMAT.md</a></li>
+          <li><a href="https://github.com/mlescaille/agent-town/blob/main/policies/mandates.cedar">policies/mandates.cedar</a></li>
+          <li><a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">ROADMAP.md</a></li>
+          <li><a href="https://github.com/mlescaille/agent-town">Repository</a></li>
+          <li><a href="https://github.com/mlescaille/agent-town/pull/1">Pull request #1, explicit delegation chain</a></li>
+        </ul>
+        <p><code>packages/core</code> holds the types, the Ed25519 JWS, attenuation, the checkpoint rules, and the Merkle tree. <code>packages/cli</code> is the <code>agentlicense</code> binary. <code>packages/sdk</code> is <code>licensed(fetch)</code>. <code>services/issuer</code>, <code>services/checkpoint</code>, <code>services/pdp</code>, and <code>services/log</code> are the four local processes. <code>examples/demo</code> is the scripted walkthrough.</p>
+      </div>
+    </section>
+
+    <section class="section" id="next">
+      <div class="wrap">
+        <span class="num">06</span>
+        <h2>Next is an MCP gateway</h2>
+        <p>The checkpoint in v1 is an HTTP proxy in front of one tool API. The next milestone is a gateway in front of <a href="https://modelcontextprotocol.io">Model Context Protocol</a> servers. v1 proves the token, the policy call, and the log. It does not speak MCP.</p>
+        <ul class="next-list">
+          <li><code>tools/call</code> is refused unless the caller presents a current license and a fresh justification.</li>
+          <li><code>tools/list</code> is filtered to the tools named in <code>authorization_details</code>.</li>
+          <li>When an agent spawns a sub-agent, the gateway asks the issuer to attenuate the license before the child receives it. The child cannot be given a tool the parent license does not already grant.</li>
+          <li>Each allowed or denied <code>tools/call</code> is appended to the same Merkle log, with the MCP server name and tool name as the action and location.</li>
+          <li>The gateway stays outside the agent process, as the checkpoint does today.</li>
+        </ul>
+        <p>After that: enrollment without a shared directory, revocation before <code>exp</code>, budgets that survive more than one checkpoint process, a required user-request JWS, ancestor scopes a checkpoint can re-check, a witness for the log, and authenticated calls to the policy decision point.</p>
+        <div class="limits">
+          <h3>Limits of this prototype</h3>
+          <p>The issuer is the only signer, so a checkpoint cannot re-prove that an ancestor scope was narrowed unless it is shown the parent license. The policy decision point trusts the checkpoint’s booleans (<code>in_scope</code>, <code>basis_ok</code>, and the rest) and is meant to stay on localhost. Budgets live in the checkpoint process. The log key can rewrite history if an observer did not keep an older signed tree head.</p>
+          <p>v1 copies the mandate through attenuation. Whether a goal should be allowed to narrow into one exact action is an open question in the roadmap, along with four others. The code picks one side so the prototype runs.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot wrap">
+    <p>Agent License is a prototype. Not a production trust service. This page does not phone home.</p>
+    <div class="foot-links">
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">Repository</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+      <a href="https://github.com/mlescaille/agent-town/pull/1">Pull request #1</a>
+    </div>
+    <p class="card-foot">Fraunces and IBM Plex Mono are used under the SIL Open Font License. License texts are in <code>site/fonts</code>.</p>
+  </footer>
+
+  <script src="samples.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
