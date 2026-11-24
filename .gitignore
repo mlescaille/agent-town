@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.agent-license/
+*.jwt
+coverage/
+.DS_Store
+*.log

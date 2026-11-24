@@ -1,0 +1,28 @@
+{
+  "name": "@agent-license/cli",
+  "version": "0.1.0",
+  "description": "agentlicense command line tool.",
+  "type": "module",
+  "bin": {
+    "agentlicense": "./dist/main.js"
+  },
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/main.js"
+  },
+  "dependencies": {
+    "@agent-license/checkpoint": "workspace:*",
+    "@agent-license/core": "workspace:*",
+    "@agent-license/issuer": "workspace:*",
+    "@agent-license/log": "workspace:*",
+    "@agent-license/pdp": "workspace:*",
+    "@agent-license/sdk": "workspace:*"
+  }
+}
