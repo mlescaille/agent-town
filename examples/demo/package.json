@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@agent-license/checkpoint": "workspace:*",
-    "@agent-license/core": "workspace:*",
+    "@agentlicense/core": "workspace:*",
     "@agent-license/issuer": "workspace:*",
     "@agent-license/log": "workspace:*",
     "@agent-license/pdp": "workspace:*",
-    "@agent-license/sdk": "workspace:*"
+    "@agentlicense/sdk": "workspace:*"
   }
 }

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#000000">
+  <title>Documentation · Agent License</title>
+  <meta name="description" content="Install Agent License, issue a signed agent credential, and check which agent is calling an API.">
+  <link rel="canonical" href="https://mlescaille.github.io/agent-town/docs/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Documentation">
+  <meta property="og:description" content="Install Agent License, issue a signed agent credential, and check which agent is calling an API.">
+  <meta property="og:url" content="https://mlescaille.github.io/agent-town/docs/">
+  <meta property="og:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Documentation">
+  <meta name="twitter:description" content="Install Agent License, issue a signed agent credential, and check which agent is calling an API.">
+  <meta name="twitter:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"Agent License","description":"Signed agent licenses for agent identity, delegated authority, and on-behalf-of calls, checked outside the agent.","codeRepository":"https://github.com/mlescaille/agent-town","programmingLanguage":"TypeScript","runtimePlatform":"Node.js","license":"https://spdx.org/licenses/MIT.html","version":"0.1.0"},{"@type":"SoftwareApplication","name":"agentlicense","applicationCategory":"DeveloperApplication","operatingSystem":"any","softwareVersion":"0.1.0","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareRequirements":"Node.js >= 22","codeRepository":"https://github.com/mlescaille/agent-town"},{"@type":"TechArticle","headline":"Documentation","description":"Install Agent License, issue a signed agent credential, and check which agent is calling an API.","url":"https://mlescaille.github.io/agent-town/docs/","isPartOf":"https://mlescaille.github.io/agent-town/"}]}</script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="nav">
+    <a class="brand" href="../">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Agent License
+    </a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr">Menu</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a class="btn" href="../docs/quickstart/">Get started <span aria-hidden="true">→</span></a>
+    </nav>
+  </header>
+  <main class="doc" id="content">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a href="quickstart/">Quickstart</a>
+      <a href="concepts/">Concepts</a>
+      <a href="cli/">CLI</a>
+      <a href="sdk/">SDK</a>
+      <a href="checkpoint/">Checkpoint</a>
+      <a href="faq/">FAQ</a>
+    </nav>
+    <article class="prose">
+<h1>Documentation</h1>
+<p>Agent License is a prototype of agent identity and delegated authority. An issuer signs a license that names the agent, the user it acts for, and what it may do. A checkpoint outside the agent checks that credential on every call.</p>
+<div class="table-wrap"><table><thead><tr><th>Page</th><th>What it covers</th></tr></thead><tbody><tr><td><a href="quickstart/">Quickstart</a></td><td>Install, keys, issue, inspect, check, log</td></tr><tr><td><a href="concepts/">Concepts</a></td><td>License, mandates, delegation, checkpoint, policy, log</td></tr><tr><td><a href="cli/">CLI</a></td><td>Every <code>agentlicense</code> command and flag</td></tr><tr><td><a href="sdk/">SDK</a></td><td><code>licensed(fetch)</code> and the core API</td></tr><tr><td><a href="checkpoint/">Checkpoint</a></td><td>Run the local issuer, checkpoint, PDP, and log</td></tr><tr><td><a href="faq/">FAQ</a></td><td>What is real today, including open pull request #1</td></tr></tbody></table></div>
+<p>The byte-level rules are in <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">spec/LICENSE-FORMAT.md</a>. Limits of this prototype are in <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
+    </article>
+  </main>
+  <footer class="foot">
+    <nav aria-label="Footer">
+      <a href="../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+    </nav>
+  </footer>
+  <script src="../nav.js"></script>
+</body>
+</html>

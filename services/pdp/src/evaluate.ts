@@ -1,6 +1,6 @@
 import { isAuthorized } from "@cedar-policy/cedar-wasm/nodejs";
 
-import { effectOf } from "@agent-license/core";
+import { effectOf } from "@agentlicense/core";
 
 import { loadPolicies } from "./policy.js";
 

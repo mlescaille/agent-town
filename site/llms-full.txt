@@ -1,0 +1,649 @@
+# Agent License
+
+> Signed agent licenses that say which agent is calling, who it acts for, and what it may do. Checked at a checkpoint outside the agent.
+
+Agent License is a prototype of agent identity and delegated authority. An issuer signs a license. The agent presents that license and a per-call justification. A checkpoint checks the signature, the mandate, the delegation chain, and a Cedar policy, then appends the decision to a Merkle log. The CLI is `agentlicense`. The SDK entry point is `licensed(fetch)` from `@agentlicense/sdk`.
+
+This repository is a prototype. Services bind to localhost. The npm packages are not published yet.
+
+## Docs
+
+- [Quickstart](https://mlescaille.github.io/agent-town/docs/quickstart/): Install Agent License, create keys, and issue a signed agent credential you can inspect and check.
+- [Concepts](https://mlescaille.github.io/agent-town/docs/concepts/): Agent identity, the three mandates, delegation, checkpoints, Cedar policy, and the Merkle decision log.
+- [CLI reference](https://mlescaille.github.io/agent-town/docs/cli/): Every agentlicense command and flag, generated from agentlicense --help.
+- [SDK reference](https://mlescaille.github.io/agent-town/docs/sdk/): Call a checkpoint with licensed(fetch), and use the core API to issue, verify, attenuate, and explain an agent credential.
+- [Running a checkpoint](https://mlescaille.github.io/agent-town/docs/checkpoint/): Start the local issuer, checkpoint, Cedar PDP, and Merkle log, then verify a decision.
+- [FAQ](https://mlescaille.github.io/agent-town/docs/faq/): Which agent is calling, how a license differs from a guess, and what this prototype does not do.
+
+## Optional
+
+- [License format](https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md): Byte-level rules for the license, justification, and log
+- [Roadmap](https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md): MCP gateway and the limits of this prototype
+- [Repository](https://github.com/mlescaille/agent-town): Source, issues, and the `agentlicense` CLI
+- [Proposed descriptor](https://mlescaille.github.io/agent-town/.well-known/agent-license.json): Not an IANA registration. The running PDP's AuthZEN discovery document is separate
+
+# Full documentation
+
+# Documentation
+
+Agent License is a prototype of agent identity and delegated authority. An issuer signs a license that names the agent, the user it acts for, and what it may do. A checkpoint outside the agent checks that credential on every call.
+
+| Page | What it covers |
+| --- | --- |
+| [Quickstart](quickstart.md) | Install, keys, issue, inspect, check, log |
+| [Concepts](concepts.md) | License, mandates, delegation, checkpoint, policy, log |
+| [CLI](cli.md) | Every `agentlicense` command and flag |
+| [SDK](sdk.md) | `licensed(fetch)` and the core API |
+| [Checkpoint](checkpoint.md) | Run the local issuer, checkpoint, PDP, and log |
+| [FAQ](faq.md) | What is real today, including open pull request #1 |
+
+The byte-level rules are in [spec/LICENSE-FORMAT.md](https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md). Limits of this prototype are in [ROADMAP.md](https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md).
+
+---
+
+# Quickstart
+
+These commands issue a license, show who it names, and dry-run one call. They run on your machine. Nothing listens on a public address.
+
+You need Node.js 22 or newer and pnpm 9. The packages are not on the npm registry yet. Names reserved for publish are `agentlicense`, `@agentlicense/sdk`, and `@agentlicense/core`.
+
+## Install from a clone
+
+```sh
+git clone https://github.com/mlescaille/agent-town.git
+cd agent-town
+pnpm install
+pnpm build
+pnpm exec agentlicense --help
+```
+
+`pnpm install` builds the packages. The repository is private until its owner makes it public, so the clone works for people who already have access. After a publish, the same CLI is `npm install -g agentlicense`.
+
+`npm install github:mlescaille/agent-town` installs this repository as a package and builds it, once npm can read the repository. The command name is still `agentlicense`.
+
+## Keys
+
+```sh
+pnpm exec agentlicense keys init
+```
+
+That writes Ed25519 keys for an issuer, a log, `user:alice`, and two agents (`planner` and `researcher`) under `.agent-license/`. The directory is local and is not committed.
+
+## Issue a user_goal license
+
+The user key signs the request. The issuer key signs the license. The compact JWS is printed on stdout.
+
+```sh
+pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate user_goal \
+  --goal "Summarize the primary calendar" \
+  --actions calendar.read,calendar.create \
+  --locations calendar:primary \
+  --budget 10 \
+  --ttl 3600 > license.jwt
+```
+
+## Inspect
+
+```sh
+pnpm exec agentlicense inspect "$(cat license.jwt)"
+```
+
+`inspect` prints the agent id, the user, the mandate, the scope, and the delegation chain. With the key directory in place it also checks the issuer signature.
+
+## Check a call
+
+This asks the Cedar policy without starting the services and without writing the log.
+
+```sh
+pnpm exec agentlicense check \
+  --license "$(cat license.jwt)" \
+  --action calendar.read \
+  --location calendar:primary \
+  --why "Reading today's events is how the summary gets its facts."
+```
+
+A call outside the license is denied:
+
+```sh
+pnpm exec agentlicense check \
+  --license "$(cat license.jwt)" \
+  --action mail.send \
+  --location mail:outbox \
+  --why "Sending mail is outside the calendar summary."
+```
+
+## Hand a narrower license to a sub-agent
+
+Scope, budget, and expiry can shrink. They cannot grow, and the mandate type stays the same.
+
+```sh
+pnpm exec agentlicense attenuate \
+  --parent "$(cat license.jwt)" \
+  --agent researcher \
+  --actions calendar.read \
+  --locations calendar:primary \
+  --budget 3 \
+  --ttl 600 > child.jwt
+```
+
+```sh
+pnpm exec agentlicense inspect "$(cat child.jwt)"
+```
+
+```sh
+pnpm exec agentlicense check \
+  --license "$(cat child.jwt)" \
+  --action calendar.read \
+  --location calendar:primary \
+  --why "The sub-agent only reads the calendar it was given."
+```
+
+## The other two mandates
+
+`direct_request` names one action and one location. The checkpoint allows only that pair.
+
+```sh
+pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate direct_request \
+  --action calendar.read \
+  --location calendar:primary \
+  --budget 1 \
+  --ttl 600 > direct.jwt
+```
+
+`agent_initiated` is the agent acting on its own, inside a fixed read-only ceiling.
+
+```sh
+pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate agent_initiated \
+  --actions clock.read,catalog.list,memory.read \
+  --locations clock:local,catalog:public,memory:self \
+  --budget 5 \
+  --ttl 600 > initiated.jwt
+```
+
+## Verify the log
+
+`check` does not append decisions. `log verify` with no server replays the files under `.agent-license/log/`. Right after `keys init` that log is empty, and an empty log still verifies.
+
+```sh
+pnpm exec agentlicense log verify
+```
+
+To append decisions, start the stack with `agentlicense dev` and then verify the URL. That is covered in [Running a checkpoint](checkpoint.md).
+
+---
+
+# Concepts
+
+An agent does not mint its own authority. A separate issuer signs a license. The agent presents that license, plus a signed reason for this call, to a checkpoint that is not the agent process. The checkpoint decides, records the decision, and only then forwards the call.
+
+That is the answer to "which agent is calling my API": the caller presents an agent credential, the credential names a user it acts for, and a component outside the agent checks both.
+
+## License
+
+A license is a compact JWS (`typ` `agent-license+jwt`) signed by the issuer with Ed25519. It names:
+
+- `sub`, the user, such as `user:alice`
+- `agent`, a SPIFFE-style id such as `spiffe://agent-license.example/agent/planner`
+- one mandate
+- one `authorization_details` entry (`urn:agent-license:tool`) with actions, locations, and an optional call budget
+- `txn` and `req_hash`, binding the license to the user-signed request
+- `act`, the delegation chain
+
+The issuer id and the checkpoint audience in this prototype are logical names, not hosts you can dial: `https://issuer.agent-license.example` and `https://checkpoint.agent-license.example`.
+
+Agents never sign licenses. They sign a short-lived justification (`agent-justification+jwt`) for one action and one location.
+
+## Mandates
+
+A license carries exactly one mandate.
+
+| Mandate | Meaning |
+| --- | --- |
+| `direct_request` | The user asked for this exact action and location. The scope is that one pair. |
+| `user_goal` | The user set a goal. The agent chooses calls inside the granted scope. The justification restates that goal. |
+| `agent_initiated` | The agent acts on its own, inside a fixed ceiling: `clock.read`, `catalog.list`, and `memory.read` on `clock:local`, `catalog:public`, and `memory:self`, with at most 5 calls. |
+
+The justification basis has to match the mandate: `user_request`, `user_goal`, or `agent`. A read verb is `read`, `list`, or `get`. Every other verb is a write. `agent_initiated` cannot write.
+
+## Delegation chain
+
+`act` is the actor claim from RFC 8693. The outermost actor is the agent presenting the license. A nested `act` is the previous agent. The chain is at most eight agents, and no agent id repeats.
+
+On current `main`, `agentlicense inspect` prints that chain as identifiers. A root license is the user, then the agent:
+
+```text
+chain
+  user:alice
+  spiffe://agent-license.example/agent/planner
+```
+
+An attenuated license adds the child at the end and sets `parent_jti`. Attenuation can narrow actions, locations, budget, and expiry. It cannot widen them, and it cannot change the mandate type.
+
+### Canonical sentence
+
+A single English sentence for the chain is not on `main`. It is only in open [pull request #1](https://github.com/mlescaille/agent-town/pull/1). That pull request would have `inspect` print a sentence of this shape:
+
+> I am Researcher (subagent-123), acting on behalf of Planner (planner-1), on behalf of user:alice, requesting documents.search.
+
+Until that pull request merges, the checkpoint does not require the sentence, and `attenuate` does not take `--name`, `--instance`, or `--task`. The on-behalf-of relationship that exists today is the nested `act` claim.
+
+## Checkpoint
+
+The checkpoint is a policy enforcement point outside the agent. `licensed(fetch)` posts the tool call to the checkpoint and sets two headers:
+
+| Header | Value |
+| --- | --- |
+| `Agent-License` | The issuer-signed license |
+| `Agent-Justification` | A new agent-signed justification for this call |
+
+The JSON body carries `action`, `resource` (`type` and `id`), optional `input`, and an optional `user_request` JWS. The URL the agent passed to `fetch` is not contacted. The checkpoint owns the upstream.
+
+`agentlicense dev` binds the checkpoint to `127.0.0.1:43122`. `POST /v1/invoke` is the only call path. `GET /health` reports that the process is up.
+
+## Policy
+
+The checkpoint sends an [OpenID AuthZEN 1.0](https://openid.net/specs/authorization-api-1_0.html) evaluation to a Cedar policy decision point. The policies in `policies/mandates.cedar` are:
+
+- `permit-bound-call`, when the justification, scope, request binding, budget, chain, mandate, and basis all check out
+- `forbid-agent-initiated-writes`
+- `forbid-direct-request-inexact`, when a direct request is not exactly the named action and location
+
+The decision point in this prototype trusts the booleans the checkpoint computed (`in_scope`, `basis_ok`, and the rest) and is meant to stay on localhost. Its discovery document is real: `GET /.well-known/authzen-configuration` on the PDP process.
+
+## Log
+
+Allowed and denied calls are appended to a Merkle log. The log signs each tree head (`agent-log-sth+jwt`). `agentlicense log verify` replays the entries and checks inclusion and consistency. A flipped leaf fails verification.
+
+The log key can rewrite history if an observer did not keep an older signed tree head. [ROADMAP.md](https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md) records that limit.
+
+## What is not a registered discovery document
+
+`GET /.well-known/authzen-configuration` on the running PDP is the AuthZEN discovery document this code serves.
+
+`/.well-known/agent-license.json` on this website is a proposed descriptor for people and agents. It is not registered with IANA. The checkpoint does not fetch it. The fields in it match this prototype: header names, token `typ` values, mandate names, and `POST /v1/invoke`. Treat the file as documentation in JSON, not as a protocol the services implement.
+
+---
+
+# CLI reference
+
+Every command and flag below is generated from `agentlicense --help`. Change the help text in `packages/cli/src/main.ts`, then run `pnpm render-docs`. Do not edit this file by hand.
+
+## Usage
+
+```text
+agentlicense — verifiable mandates for AI agents
+
+Signed licenses for agent identity and delegated authority. An issuer signs
+a license that names the agent, who it acts for, and what it may do. A
+checkpoint outside the agent checks that license on every call.
+
+Usage:
+  agentlicense --help
+  agentlicense keys init [--home <dir>]
+  agentlicense issue --user <name> --agent <name> --mandate <mandate> [flags]
+  agentlicense inspect <license> [--home <dir>]
+  agentlicense attenuate --parent <license> --agent <name> [flags]
+  agentlicense check --license <license> --action <name> --location <type:id> [flags]
+  agentlicense log verify [--url <url>] [--home <dir>]
+  agentlicense dev [--home <dir>]
+
+The default key directory is ./.agent-license.
+issue and attenuate print a compact JWS on stdout. Notes go to stderr.
+```
+
+## keys init
+
+Write Ed25519 keys for the issuer, the log, user:alice, planner, and researcher.
+
+| Flag | Meaning |
+| --- | --- |
+| `--home <dir>` | Key directory. Default: .agent-license |
+
+## issue
+
+Sign a license. Requires --user, --agent, and --mandate. The named user's key signs the request. The issuer key signs the license. direct_request needs exactly one action and one location. user_goal needs --goal. agent_initiated must stay inside the read-only ceiling: clock.read, catalog.list, memory.read and clock:local, catalog:public, memory:self, with budget at most 5.
+
+| Flag | Meaning |
+| --- | --- |
+| `--home <dir>` | Key directory. Default: .agent-license |
+| `--user <name>` | Required. User name, or user:<name>. |
+| `--agent <name>` | Required. Agent slug, or a spiffe:// id. |
+| `--mandate <mandate>` | Required. direct_request, user_goal, or agent_initiated. |
+| `--goal <text>` | Required for user_goal. The goal the user set. |
+| `--action <name>` | One action, such as calendar.read. |
+| `--location <type:id>` | One location, such as calendar:primary. |
+| `--actions <list>` | Comma-separated actions. |
+| `--locations <list>` | Comma-separated locations. |
+| `--budget <n>` | max_calls for this license. |
+| `--ttl <seconds>` | Lifetime in seconds. Default: 3600. |
+
+## inspect
+
+Print the claims and the delegation chain. Checks the issuer signature when the key directory has an issuer key.
+
+| Flag | Meaning |
+| --- | --- |
+| `<license>` | Positional compact JWS. |
+| `--home <dir>` | Key directory. Default: .agent-license |
+
+## attenuate
+
+Sign a narrower license for a sub-agent. Scope, budget, and expiry can shrink. They cannot grow, and the mandate type cannot change.
+
+| Flag | Meaning |
+| --- | --- |
+| `--home <dir>` | Key directory. Default: .agent-license |
+| `--parent <license>` | Required. Parent compact JWS. |
+| `--agent <name>` | Required. Child agent slug, or a spiffe:// id. |
+| `--actions <list>` | Comma-separated actions. Default: the parent's actions. |
+| `--locations <list>` | Comma-separated locations. Default: the parent's locations. |
+| `--budget <n>` | max_calls. Cannot exceed the parent. |
+| `--ttl <seconds>` | Lifetime. Must expire no later than the parent. |
+
+## check
+
+Dry-run one call against the Cedar policy. Does not start services and does not append to the log.
+
+| Flag | Meaning |
+| --- | --- |
+| `--home <dir>` | Key directory. Default: .agent-license |
+| `--license <license>` | Required. Compact JWS. |
+| `--action <name>` | Required. |
+| `--location <type:id>` | Required. |
+| `--why <text>` | Why this call is being made. Used when --justification is omitted. |
+| `--justification <jws>` | Pre-signed justification. Default: sign one with the agent key. |
+| `--user-request <jws>` | Originating user-request JWS. Checked when present. |
+| `--basis <basis>` | user_request, user_goal, or agent. Default: the basis the mandate requires. |
+
+## log verify
+
+Replay the Merkle decision log and check inclusion and consistency.
+
+| Flag | Meaning |
+| --- | --- |
+| `--home <dir>` | Key directory. Default: .agent-license. Supplies the log public key, and the local log when --url is omitted. |
+| `--url <url>` | Log base URL, for example http://127.0.0.1:43124. |
+
+## dev
+
+Start the issuer, checkpoint, Cedar PDP, Merkle log, and demo tool on 127.0.0.1. Ports: issuer 43121, checkpoint 43122, pdp 43123, log 43124, upstream 43125. Creates the key directory when it is missing. Runs until SIGINT or SIGTERM.
+
+| Flag | Meaning |
+| --- | --- |
+| `--home <dir>` | Key directory. Default: .agent-license |
+
+## Help text
+
+```text
+agentlicense — verifiable mandates for AI agents
+
+Signed licenses for agent identity and delegated authority. An issuer signs
+a license that names the agent, who it acts for, and what it may do. A
+checkpoint outside the agent checks that license on every call.
+
+Usage:
+  agentlicense --help
+  agentlicense keys init [--home <dir>]
+  agentlicense issue --user <name> --agent <name> --mandate <mandate> [flags]
+  agentlicense inspect <license> [--home <dir>]
+  agentlicense attenuate --parent <license> --agent <name> [flags]
+  agentlicense check --license <license> --action <name> --location <type:id> [flags]
+  agentlicense log verify [--url <url>] [--home <dir>]
+  agentlicense dev [--home <dir>]
+
+The default key directory is ./.agent-license.
+issue and attenuate print a compact JWS on stdout. Notes go to stderr.
+
+keys init
+  Write Ed25519 keys for the issuer, the log, user:alice, planner, and researcher.
+  --home <dir>           Key directory. Default: .agent-license
+
+issue
+  Sign a license. Requires --user, --agent, and --mandate.
+  The named user's key signs the request. The issuer key signs the license.
+  direct_request needs exactly one action and one location.
+  user_goal needs --goal. agent_initiated must stay inside the read-only ceiling:
+  clock.read, catalog.list, memory.read and clock:local, catalog:public, memory:self,
+  with budget at most 5.
+  --home <dir>           Key directory. Default: .agent-license
+  --user <name>          Required. User name, or user:<name>.
+  --agent <name>         Required. Agent slug, or a spiffe:// id.
+  --mandate <mandate>    Required. direct_request, user_goal, or agent_initiated.
+  --goal <text>          Required for user_goal. The goal the user set.
+  --action <name>        One action, such as calendar.read.
+  --location <type:id>   One location, such as calendar:primary.
+  --actions <list>       Comma-separated actions.
+  --locations <list>     Comma-separated locations.
+  --budget <n>           max_calls for this license.
+  --ttl <seconds>        Lifetime in seconds. Default: 3600.
+
+inspect
+  Print the claims and the delegation chain. Checks the issuer signature when the key directory has an issuer key.
+  <license>              Positional compact JWS.
+  --home <dir>           Key directory. Default: .agent-license
+
+attenuate
+  Sign a narrower license for a sub-agent. Scope, budget, and expiry can shrink. They cannot grow, and the mandate type cannot change.
+  --home <dir>           Key directory. Default: .agent-license
+  --parent <license>     Required. Parent compact JWS.
+  --agent <name>         Required. Child agent slug, or a spiffe:// id.
+  --actions <list>       Comma-separated actions. Default: the parent's actions.
+  --locations <list>     Comma-separated locations. Default: the parent's locations.
+  --budget <n>           max_calls. Cannot exceed the parent.
+  --ttl <seconds>        Lifetime. Must expire no later than the parent.
+
+check
+  Dry-run one call against the Cedar policy. Does not start services and does not append to the log.
+  --home <dir>              Key directory. Default: .agent-license
+  --license <license>       Required. Compact JWS.
+  --action <name>           Required.
+  --location <type:id>      Required.
+  --why <text>              Why this call is being made. Used when --justification is omitted.
+  --justification <jws>     Pre-signed justification. Default: sign one with the agent key.
+  --user-request <jws>      Originating user-request JWS. Checked when present.
+  --basis <basis>           user_request, user_goal, or agent. Default: the basis the mandate requires.
+
+log verify
+  Replay the Merkle decision log and check inclusion and consistency.
+  --home <dir>     Key directory. Default: .agent-license. Supplies the log public key, and the local log when --url is omitted.
+  --url <url>      Log base URL, for example http://127.0.0.1:43124.
+
+dev
+  Start the issuer, checkpoint, Cedar PDP, Merkle log, and demo tool on 127.0.0.1.
+  Ports: issuer 43121, checkpoint 43122, pdp 43123, log 43124, upstream 43125.
+  Creates the key directory when it is missing. Runs until SIGINT or SIGTERM.
+  --home <dir>     Key directory. Default: .agent-license
+```
+
+---
+
+# SDK reference
+
+`@agentlicense/sdk` exports one function, `licensed(fetch)`. `@agentlicense/core` is the library that issues and checks licenses. Both are ESM, for Node.js 22 or newer.
+
+They are not on the npm registry yet. From a clone, `pnpm install` links them. After publish:
+
+```text
+npm install @agentlicense/sdk
+```
+
+That installs `@agentlicense/core` as well.
+
+## licensed(fetch)
+
+`licensed(baseFetch, options)` returns a function with the fetch signature. Each call posts JSON to `{checkpoint}/v1/invoke` and sets `Agent-License` and `Agent-Justification`. The request URL is ignored. The JSON body must include `action` and `resource` with `type` and `id`.
+
+| Option | Required | Role |
+| --- | --- | --- |
+| `license` | yes | Compact issuer-signed license |
+| `agentPrivateKey` | yes | Private key of the agent named by the license |
+| `checkpoint` | yes | Origin of the checkpoint, such as `http://127.0.0.1:43122` |
+| `why` | yes | A string, or a function of `{ action, location }` |
+| `userRequest` | no | User-request JWS. The checkpoint checks its hash when present |
+
+The justification basis is chosen from the mandate. For `user_goal` the goal is copied from the license. The justification lives at most 300 seconds; the helper uses 60.
+
+## Runnable example
+
+`examples/sdk-quickstart/main.mjs` issues a `user_goal` license and presents it. Without `CHECKPOINT`, it uses a stand-in fetch and prints the headers. With `CHECKPOINT` set to a running `agentlicense dev`, it calls that checkpoint. Set `AGENT_LICENSE_HOME` to the same key directory `dev` is using, or the issuer signature will not match.
+
+<!-- include:examples/sdk-quickstart/main.mjs -->
+
+From the repository root, after `pnpm install`:
+
+```sh
+pnpm --filter @agent-license/sdk-quickstart start
+```
+
+Against a local checkpoint that was started with the default key directory:
+
+```sh
+AGENT_LICENSE_HOME=.agent-license CHECKPOINT=http://127.0.0.1:43122 pnpm --filter @agent-license/sdk-quickstart start
+```
+
+## Core API
+
+Import from `@agentlicense/core`. The calls below are the ones the CLI and the checkpoint use.
+
+| Function | What it does |
+| --- | --- |
+| `initKeystore(home)` | Writes issuer, log, `user:alice`, `planner`, and `researcher` keys |
+| `loadKeystore(home)` | Reads that directory |
+| `generateEd25519Keypair()` | One Ed25519 key, `kid` set to the RFC 7638 thumbprint |
+| `publicJwk(key)` | Public OKP JWK |
+| `userIdOf(name)` / `agentSpiffe(name)` | `user:alice` and `spiffe://agent-license.example/agent/planner` |
+| `createUserRequest(input)` | User-signed `agent-request+jwt` |
+| `issueLicense(input)` | Issuer-signed license bound to that request |
+| `verifyLicense(jws, issuerPublic)` | Signature, time window, and claim shape |
+| `attenuateLicense(input)` | Narrower child license |
+| `createJustification(input)` | Agent-signed justification |
+| `verifyJustification(jws, agentPublic)` | Checks that justification |
+| `assessPresentation(input)` | License, justification, scope, budget, chain, and basis |
+| `delegationChain(claims)` | User, then agents from the original to the current |
+| `expectedBasis(mandateType)` | `user_request`, `user_goal`, or `agent` |
+| `parseLicenseClaims` / `decodeJws` | Parse without trusting a signature |
+| `MerkleLog` | Append-only tree of decision records |
+| `verifyReplayedLog(entries, sths, logPublic)` | Inclusion and consistency over a saved log |
+| `LicenseError` | `error.code` is a stable string such as `malformed` or `expired` |
+
+`issueLicense` returns `{ license, claims }`. `authorization_details` has exactly one element. Unknown claim names are rejected.
+
+Constants worth knowing: `LICENSE_TYP`, `REQUEST_TYP`, `JUSTIFICATION_TYP`, `STH_TYP`, `AGENT_INITIATED_CEILING`, `MAX_CHAIN_DEPTH` (8), and `MAX_JUSTIFICATION_TTL_SECONDS` (300).
+
+The demo at `examples/demo` runs the same API against the services: three mandates, an over-scope denial, attenuation, and a log replay. `pnpm demo` prints `demo: ok` when that walkthrough passes.
+
+---
+
+# Running a checkpoint
+
+`agentlicense dev` starts five processes on `127.0.0.1`. They share the key directory. This is the prototype's whole deployment: one machine, no public listener.
+
+```sh
+pnpm exec agentlicense dev
+```
+
+| Port | Process | Role |
+| --- | --- | --- |
+| 43121 | Issuer | Signs licenses and attenuated licenses |
+| 43122 | Checkpoint | Checks the caller, then forwards the tool call |
+| 43123 | Cedar PDP | AuthZEN evaluation |
+| 43124 | Log | Merkle decisions and proofs |
+| 43125 | Demo tool | Upstream the checkpoint calls when the decision is allow |
+
+If `.agent-license/` is missing, `dev` creates it. The process runs until SIGINT or SIGTERM.
+
+Health checks, from another shell:
+
+```sh
+curl -s http://127.0.0.1:43121/health
+curl -s http://127.0.0.1:43122/health
+curl -s http://127.0.0.1:43123/health
+curl -s http://127.0.0.1:43123/.well-known/authzen-configuration
+curl -s http://127.0.0.1:43124/health
+curl -s http://127.0.0.1:43125/health
+```
+
+The AuthZEN document on port 43123 is served by the PDP. It points at `/access/v1/evaluation` on that same process.
+
+## Present a license
+
+With `dev` running, the SDK quickstart can use the same keys:
+
+```sh
+AGENT_LICENSE_HOME=.agent-license CHECKPOINT=http://127.0.0.1:43122 pnpm --filter @agent-license/sdk-quickstart start
+```
+
+The agent posts to `http://127.0.0.1:43122/v1/invoke` with `Agent-License` and `Agent-Justification`. An allow is HTTP 200 and includes the upstream result. A deny is HTTP 403 and still has a `log_index`, because the denial is recorded before the tool is contacted.
+
+Issuer routes, if you sign without the CLI:
+
+| Method and path | Body |
+| --- | --- |
+| `POST /v1/licenses` | `{ "user_request": "<jws>", "ttl_seconds": 3600 }` |
+| `POST /v1/licenses/attenuate` | `{ "parent": "<jws>", "agent": "<spiffe id>", "authorization_details": [], "exp": 1700000000 }` |
+| `GET /jwks` | Issuer, user, and agent public keys |
+
+## Verify the log
+
+After at least one invoke:
+
+```sh
+pnpm exec agentlicense log verify --url http://127.0.0.1:43124
+```
+
+That downloads the entries and signed tree heads, replays them, and checks an inclusion proof and a consistency proof. `ok true` means the replay matched. The log public key comes from `--home` (default `.agent-license`).
+
+`log verify` without `--url` reads `.agent-license/log/entries.ndjson` and `sths.ndjson` instead of the network.
+
+## What this process is not
+
+The checkpoint does not authenticate itself to the policy decision point. Budgets live in the checkpoint process and reset when it exits. A checkpoint cannot re-prove that an ancestor scope was narrowed unless it is shown the parent license. Do not put these ports on a network.
+
+---
+
+# FAQ
+
+## Which agent is calling my API?
+
+The one named by the `Agent-License` header, if the checkpoint accepts the signature, the lifetime, the scope, the delegation chain, and the mandate. The license `agent` claim is a SPIFFE-style id. `sub` is the user that agent acts for. A justification signed by that agent's key says why this call is the one being made. The checkpoint is outside the agent, so the agent does not grade its own homework.
+
+## Is this authentication or authorization?
+
+Both, in a small way. The signatures are how the checkpoint authenticates the issuer and the agent. The mandate, the scope, and the Cedar policy are the authorization decision. A valid signature with the wrong action is still a deny.
+
+## What is an on-behalf-of chain?
+
+The license `act` claim, from RFC 8693. Each nested actor delegated to the next. The outermost actor is the agent making the call. On current `main`, `inspect` prints those ids. The English sentence ("I am Researcher, acting on behalf of Planner, on behalf of user:alice") is only in open [pull request #1](https://github.com/mlescaille/agent-town/pull/1).
+
+## Can an agent widen its license?
+
+No. Attenuation can drop actions, drop locations, lower `max_calls`, and shorten `exp`. It cannot add authority, and it cannot change `direct_request`, `user_goal`, or `agent_initiated` into a different mandate.
+
+## Does this speak MCP?
+
+Not yet. The checkpoint is an HTTP proxy in front of one demo tool. [ROADMAP.md](https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md) describes a later gateway where `tools/call` would require a license and `tools/list` would be filtered to the license scope. Nothing in this repository speaks the Model Context Protocol today.
+
+## Is the npm package installable?
+
+The names `agentlicense`, `@agentlicense/sdk`, and `@agentlicense/core` are the publish names. They are not on the registry until someone pushes a `v*` tag and the publish workflow runs with an `NPM_TOKEN` secret. Until then, clone the repository and use pnpm. `npm install github:mlescaille/agent-town` is the git install, and it needs the repository to be readable by npm.
+
+## Why does `agentlicense dev` bind to localhost?
+
+The issuer, the policy decision point, and the log share a key directory and trust each other without authentication. That is acceptable for a prototype on `127.0.0.1` and unsafe anywhere else.
+
+## What does the website's well-known file mean?
+
+`/.well-known/agent-license.json` describes this project for agents that fetch the site. It is proposed, not an IANA registration, and the services do not fetch it. The PDP's `/.well-known/authzen-configuration` is different: that route exists in the running process and follows OpenID AuthZEN.
+
+## What is deliberately unfinished?
+
+Revocation before `exp`, budgets that survive a restart, a mandatory user-request presentation, ancestor scopes embedded so a checkpoint can re-check attenuation, and a second log so a replaced log key is visible to someone who kept an older tree head. Those are listed in the roadmap. This repository is not a production trust service.

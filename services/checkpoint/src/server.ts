@@ -15,7 +15,7 @@ import {
   sendJson,
   type Assessment,
   type DecisionRecord,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 import { combineDecision, type PolicyAnswer } from "./decide.js";
 

@@ -16,7 +16,7 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@agent-license/core": "workspace:*",
+    "@agentlicense/core": "workspace:*",
     "@cedar-policy/cedar-wasm": "4.15.0"
   }
 }

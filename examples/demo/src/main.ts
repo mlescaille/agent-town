@@ -21,11 +21,11 @@ import {
   type AuthorizationDetail,
   type LicenseClaims,
   type Mandate,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 import { startIssuer } from "@agent-license/issuer";
 import { startLog } from "@agent-license/log";
 import { startPdp } from "@agent-license/pdp";
-import { licensed } from "@agent-license/sdk";
+import { licensed } from "@agentlicense/sdk";
 
 interface Step {
   label: string;

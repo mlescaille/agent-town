@@ -1,0 +1,23 @@
+# Agent License
+
+> Signed agent licenses that say which agent is calling, who it acts for, and what it may do. Checked at a checkpoint outside the agent.
+
+Agent License is a prototype of agent identity and delegated authority. An issuer signs a license. The agent presents that license and a per-call justification. A checkpoint checks the signature, the mandate, the delegation chain, and a Cedar policy, then appends the decision to a Merkle log. The CLI is `agentlicense`. The SDK entry point is `licensed(fetch)` from `@agentlicense/sdk`.
+
+This repository is a prototype. Services bind to localhost. The npm packages are not published yet.
+
+## Docs
+
+- [Quickstart](https://mlescaille.github.io/agent-town/docs/quickstart/): Install Agent License, create keys, and issue a signed agent credential you can inspect and check.
+- [Concepts](https://mlescaille.github.io/agent-town/docs/concepts/): Agent identity, the three mandates, delegation, checkpoints, Cedar policy, and the Merkle decision log.
+- [CLI reference](https://mlescaille.github.io/agent-town/docs/cli/): Every agentlicense command and flag, generated from agentlicense --help.
+- [SDK reference](https://mlescaille.github.io/agent-town/docs/sdk/): Call a checkpoint with licensed(fetch), and use the core API to issue, verify, attenuate, and explain an agent credential.
+- [Running a checkpoint](https://mlescaille.github.io/agent-town/docs/checkpoint/): Start the local issuer, checkpoint, Cedar PDP, and Merkle log, then verify a decision.
+- [FAQ](https://mlescaille.github.io/agent-town/docs/faq/): Which agent is calling, how a license differs from a guess, and what this prototype does not do.
+
+## Optional
+
+- [License format](https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md): Byte-level rules for the license, justification, and log
+- [Roadmap](https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md): MCP gateway and the limits of this prototype
+- [Repository](https://github.com/mlescaille/agent-town): Source, issues, and the `agentlicense` CLI
+- [Proposed descriptor](https://mlescaille.github.io/agent-town/.well-known/agent-license.json): Not an IANA registration. The running PDP's AuthZEN discovery document is separate

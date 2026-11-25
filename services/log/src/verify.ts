@@ -7,7 +7,7 @@ import {
   type InclusionProof,
   type LogVerification,
   type OkpPublicJwk,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 export interface RemoteVerification extends LogVerification {
   server_inclusion_ok: boolean;

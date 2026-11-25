@@ -16,7 +16,7 @@ import {
   requestUrl,
   sendJson,
   type DecisionRecord,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 export interface Running {
   url: string;

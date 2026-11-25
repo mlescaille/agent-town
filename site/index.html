@@ -5,9 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="Signed mandates that say who an agent is, who it acts for, and what it may do. Checked outside the agent.">
-  <title>Agent License</title>
+  <meta name="description" content="Signed agent credentials for AI agent authentication and delegated authority. A checkpoint outside the agent checks which agent is calling, on whose behalf, and what the license allows.">
+  <title>Agent License — which agent is calling</title>
+  <link rel="canonical" href="https://mlescaille.github.io/agent-town/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Agent License — which agent is calling">
+  <meta property="og:description" content="Signed agent credentials for identity, on-behalf-of delegation, and authorization. Checked outside the agent.">
+  <meta property="og:url" content="https://mlescaille.github.io/agent-town/">
+  <meta property="og:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Agent License — which agent is calling">
+  <meta name="twitter:description" content="Signed agent credentials for identity, on-behalf-of delegation, and authorization. Checked outside the agent.">
+  <meta name="twitter:image" content="https://mlescaille.github.io/agent-town/og.png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "Agent License",
+        "description": "Signed agent licenses for agent identity, delegated authority, and on-behalf-of calls, checked outside the agent.",
+        "codeRepository": "https://github.com/mlescaille/agent-town",
+        "programmingLanguage": "TypeScript",
+        "runtimePlatform": "Node.js",
+        "license": "https://spdx.org/licenses/MIT.html",
+        "version": "0.1.0"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "agentlicense",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "any",
+        "softwareVersion": "0.1.0",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "softwareRequirements": "Node.js >= 22",
+        "codeRepository": "https://github.com/mlescaille/agent-town"
+      }
+    ]
+  }
+  </script>
   <link rel="preload" href="fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
@@ -30,7 +69,7 @@
       </svg>
     </button>
     <nav class="nav-links" id="nav-links" aria-label="Primary">
-      <a href="https://github.com/mlescaille/agent-town/blob/main/README.md">Docs</a>
+      <a href="docs/">Docs</a>
       <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
       <a href="https://github.com/mlescaille/agent-town">GitHub</a>
       <a class="btn" href="#quickstart">Get started <span aria-hidden="true">→</span></a>
@@ -197,6 +236,7 @@
 
   <footer class="foot">
     <nav aria-label="Footer">
+      <a href="docs/">Docs</a>
       <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
       <a href="https://github.com/mlescaille/agent-town">GitHub</a>
       <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
@@ -204,6 +244,7 @@
   </footer>
 
   <script src="samples.js"></script>
+  <script src="nav.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

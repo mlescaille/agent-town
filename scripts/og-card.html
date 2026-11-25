@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    @font-face { font-family: Inter; src: url("../site/fonts/inter-700.woff2") format("woff2"); font-weight: 700; }
+    @font-face { font-family: Inter; src: url("../site/fonts/inter-400.woff2") format("woff2"); font-weight: 400; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("../site/fonts/plex-400.woff2") format("woff2"); font-weight: 400; }
+    html, body { margin: 0; width: 1200px; height: 630px; background: #000; color: #fff; }
+    body { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; display: flex; align-items: center; }
+    .card { padding: 72px 80px; }
+    .mark { display: flex; align-items: center; gap: 16px; color: #b6f23a; font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
+    .mark svg { width: 42px; height: 42px; }
+    h1 { margin: 36px 0 0; font-size: 76px; line-height: 0.98; letter-spacing: -0.045em; font-weight: 700; max-width: 920px; }
+    p { margin: 28px 0 0; color: #d6d6d6; font-size: 30px; line-height: 1.35; max-width: 820px; }
+    .meta { margin-top: 36px; font-family: "IBM Plex Mono", ui-monospace, monospace; color: #b6f23a; font-size: 22px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="mark">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Agent License
+    </div>
+    <h1>Which agent is calling your API.</h1>
+    <p>Signed credentials for identity, on-behalf-of delegation, and what the agent may do. Checked outside the agent.</p>
+    <p class="meta">agent identity · delegated authority · checkpoint</p>
+  </div>
+</body>
+</html>

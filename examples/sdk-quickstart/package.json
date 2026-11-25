@@ -1,0 +1,13 @@
+{
+  "name": "@agent-license/sdk-quickstart",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node main.mjs"
+  },
+  "dependencies": {
+    "@agentlicense/core": "workspace:*",
+    "@agentlicense/sdk": "workspace:*"
+  }
+}

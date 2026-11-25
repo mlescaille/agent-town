@@ -8,7 +8,7 @@ import {
   publicJwk,
   userIdOf,
   verifyJustification,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 import { licensed } from "../src/index.js";
 

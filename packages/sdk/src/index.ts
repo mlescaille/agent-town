@@ -5,7 +5,7 @@ import {
   parseLicenseClaims,
   type LicenseClaims,
   type OkpPrivateJwk,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 export interface LicensedOptions {
   /** Compact issuer-signed license JWS. */
