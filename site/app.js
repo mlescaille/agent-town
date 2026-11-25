@@ -69,14 +69,22 @@
         : blocks.length
           ? [...blocks].map((block) => block.textContent.replace(/\s+$/u, "")).join("\n\n")
           : source.textContent.trim();
-      const original = button.getAttribute("aria-label");
+      const label = button.querySelector(".copy-label");
+      const originalLabel = label ? label.textContent : "";
+      const originalAria = button.getAttribute("aria-label");
       try {
         await navigator.clipboard.writeText(text);
+        button.classList.add("is-copied");
         button.setAttribute("aria-label", "Copied");
+        if (label) label.textContent = "Copied";
       } catch {
         button.setAttribute("aria-label", "Copy failed");
       }
-      window.setTimeout(() => button.setAttribute("aria-label", original), 1600);
+      window.setTimeout(() => {
+        button.classList.remove("is-copied");
+        button.setAttribute("aria-label", originalAria);
+        if (label) label.textContent = originalLabel;
+      }, 1600);
     });
   });
 
