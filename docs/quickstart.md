@@ -12,7 +12,8 @@ You need Node.js 22 or newer and pnpm 9. The packages are not on the npm registr
 ## Install from a clone
 
 ```sh
-git clone https://github.com/mlescaille/agent-town.git
+git clone \
+  https://github.com/mlescaille/agent-town.git
 cd agent-town
 pnpm install
 pnpm build

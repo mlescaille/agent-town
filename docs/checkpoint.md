@@ -39,7 +39,9 @@ The AuthZEN document on port 43123 is served by the PDP. It points at `/access/v
 With `dev` running, the SDK quickstart can use the same keys:
 
 ```sh
-AGENT_LICENSE_HOME=.agent-license CHECKPOINT=http://127.0.0.1:43122 pnpm --filter @agent-license/sdk-quickstart start
+AGENT_LICENSE_HOME=.agent-license \
+  CHECKPOINT=http://127.0.0.1:43122 \
+  pnpm --filter @agent-license/sdk-quickstart start
 ```
 
 The agent posts to `http://127.0.0.1:43122/v1/invoke` with `Agent-License` and `Agent-Justification`. An allow is HTTP 200 and includes the upstream result. A deny is HTTP 403 and still has a `log_index`, because the denial is recorded before the tool is contacted.

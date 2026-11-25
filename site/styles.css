@@ -913,8 +913,10 @@ a {
 }
 
 .doc-nav {
+  position: relative;
   display: flex;
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.4rem;
   max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -922,6 +924,23 @@ a {
   margin: 0 0 var(--s3);
   border-bottom: 1px solid var(--line);
   scrollbar-width: thin;
+}
+
+.doc-nav-wrap {
+  position: relative;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.doc-nav-wrap.is-overflowing::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0.75rem;
+  width: 3.2rem;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0), #000 62%);
+  pointer-events: none;
 }
 
 .doc-nav a {
@@ -955,8 +974,8 @@ a {
 }
 
 .prose h2 {
-  margin: var(--s5) 0 var(--s2);
-  font-size: 1.45rem;
+  margin: var(--s5) 0 var(--s3);
+  font-size: clamp(1.45rem, 3vw, 1.7rem);
   font-weight: 600;
   letter-spacing: -0.03em;
 }
@@ -973,6 +992,13 @@ a {
 .prose li {
   color: #e8e8e8;
   overflow-wrap: break-word;
+}
+
+.prose p code,
+.prose li code,
+.prose td code {
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .prose p {
@@ -1003,18 +1029,71 @@ a {
 
 .prose pre {
   max-width: 100%;
-  overflow-x: auto;
-  margin: 0 0 var(--s3);
-  padding: var(--s3);
-  background: #0d0d0d;
-  border: 1px solid #2c2c2c;
-  border-radius: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .prose pre code {
   font-size: 0.78rem;
   line-height: 1.55;
   white-space: pre;
+}
+
+.codeblock {
+  position: relative;
+  max-width: 100%;
+  margin: 0 0 var(--s3);
+  background: #0d0d0d;
+  border: 1px solid #2c2c2c;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.codeblock-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--s3);
+  scrollbar-width: thin;
+  scrollbar-color: #6a6a6a #161616;
+}
+
+.codeblock-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.codeblock-scroll::-webkit-scrollbar-thumb {
+  background: #6a6a6a;
+  border-radius: 4px;
+}
+
+.codeblock pre {
+  width: max-content;
+  min-width: 100%;
+}
+
+.codeblock::after,
+.prose .term::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4.5rem;
+  background: linear-gradient(90deg, rgba(13, 13, 13, 0), #0d0d0d 55%);
+  pointer-events: none;
+  display: none;
+}
+
+.prose .term.is-overflowing::after {
+  display: block;
+  top: 3.1rem;
+}
+
+.codeblock.is-overflowing::after {
+  display: block;
 }
 
 .prose .term {
@@ -1072,16 +1151,24 @@ a {
     align-items: start;
   }
 
-  .doc-nav {
+  .doc-nav-wrap {
     position: sticky;
     top: 0;
+  }
+
+  .doc-nav {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
     overflow: visible;
     border-bottom: 0;
     border-right: 1px solid var(--line);
     padding: 0.25rem var(--s2) var(--s4) 0;
     margin: 0;
+  }
+
+  .doc-nav-wrap.is-overflowing::after {
+    display: none;
   }
 
   .doc-nav a {

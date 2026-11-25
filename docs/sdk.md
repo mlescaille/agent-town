@@ -44,7 +44,9 @@ pnpm --filter @agent-license/sdk-quickstart start
 Against a local checkpoint that was started with the default key directory:
 
 ```sh
-AGENT_LICENSE_HOME=.agent-license CHECKPOINT=http://127.0.0.1:43122 pnpm --filter @agent-license/sdk-quickstart start
+AGENT_LICENSE_HOME=.agent-license \
+  CHECKPOINT=http://127.0.0.1:43122 \
+  pnpm --filter @agent-license/sdk-quickstart start
 ```
 
 ## Core API

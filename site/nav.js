@@ -27,6 +27,37 @@
     });
   });
 
+  function markOverflow(root, scroller) {
+    root.classList.toggle("is-overflowing", scroller.scrollWidth > scroller.clientWidth + 1);
+  }
+
+  function scanOverflow() {
+    document.querySelectorAll(".term").forEach((block) => {
+      const scroller = block.querySelector(".term-scroll");
+      if (scroller) markOverflow(block, scroller);
+    });
+    document.querySelectorAll(".codeblock").forEach((block) => {
+      const scroller = block.querySelector(".codeblock-scroll");
+      if (scroller) markOverflow(block, scroller);
+    });
+    const docNav = document.querySelector(".doc-nav");
+    const docNavWrap = document.querySelector(".doc-nav-wrap");
+    if (!docNav || !docNavWrap) return;
+    markOverflow(docNavWrap, docNav);
+    const current = docNav.querySelector("[aria-current='page']");
+    if (!current || !docNavWrap.classList.contains("is-overflowing")) return;
+    const navRect = docNav.getBoundingClientRect();
+    const pillRect = current.getBoundingClientRect();
+    if (pillRect.left < navRect.left + 4 || pillRect.right > navRect.right - 4) {
+      const left = current.offsetLeft - (docNav.clientWidth - current.offsetWidth) / 2;
+      docNav.scrollTo({ left: Math.max(0, left) });
+    }
+  }
+
+  scanOverflow();
+  window.addEventListener("resize", scanOverflow);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scanOverflow);
+
   const nav = document.querySelector(".nav");
   const menu = document.querySelector(".menu");
   const panel = document.getElementById("nav-links");

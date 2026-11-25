@@ -45,6 +45,7 @@
     </nav>
   </header>
   <main class="doc" id="content">
+    <div class="doc-nav-wrap">
     <nav class="doc-nav" aria-label="Documentation">
       <a href="../quickstart/">Quickstart</a>
       <a href="../concepts/">Concepts</a>
@@ -53,10 +54,11 @@
       <a href="../checkpoint/">Checkpoint</a>
       <a href="../faq/" aria-current="page">FAQ</a>
     </nav>
+    </div>
     <article class="prose">
 <h1>FAQ</h1>
 <h2>Which agent is calling my API?</h2>
-<p>The one named by the <code>Agent-License</code> header, if the checkpoint accepts the signature, the lifetime, the scope, the delegation chain, and the mandate. The license <code>agent</code> claim is a SPIFFE-style id. <code>sub</code> is the user that agent acts for. A justification signed by that agent's key says why this call is the one being made. The checkpoint is outside the agent, so the agent does not grade its own homework.</p>
+<p>The one named by the <code>Agent&#8209;License</code> header, if the checkpoint accepts the signature, the lifetime, the scope, the delegation chain, and the mandate. The license <code>agent</code> claim is a SPIFFE-style id. <code>sub</code> is the user that agent acts for. A justification signed by that agent's key says why this call is the one being made. The checkpoint is outside the agent, so the agent does not grade its own homework.</p>
 <h2>Is this authentication or authorization?</h2>
 <p>Both, in a small way. The signatures are how the checkpoint authenticates the issuer and the agent. The mandate, the scope, and the Cedar policy are the authorization decision. A valid signature with the wrong action is still a deny.</p>
 <h2>What is an on-behalf-of chain?</h2>
@@ -64,13 +66,13 @@
 <h2>Can an agent widen its license?</h2>
 <p>No. Attenuation can drop actions, drop locations, lower <code>max_calls</code>, and shorten <code>exp</code>. It cannot add authority, and it cannot change <code>direct_request</code>, <code>user_goal</code>, or <code>agent_initiated</code> into a different mandate.</p>
 <h2>Does this speak MCP?</h2>
-<p>Not yet. The checkpoint is an HTTP proxy in front of one demo tool. <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">ROADMAP.md</a> describes a later gateway where <code>tools/call</code> would require a license and <code>tools/list</code> would be filtered to the license scope. Nothing in this repository speaks the Model Context Protocol today.</p>
+<p>Not yet. The checkpoint is an HTTP proxy in front of one demo tool. <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">ROADMAP.md</a> describes a later gateway where <code>tools/<wbr>call</code> would require a license and <code>tools/<wbr>list</code> would be filtered to the license scope. Nothing in this repository speaks the Model Context Protocol today.</p>
 <h2>Is the npm package installable?</h2>
-<p>The names <code>agentlicense</code>, <code>@agentlicense/sdk</code>, and <code>@agentlicense/core</code> are the publish names. They are not on the registry until someone pushes a <code>v*</code> tag and the publish workflow runs with an <code>NPM_TOKEN</code> secret. Until then, clone the repository and use pnpm. <code>npm install github:mlescaille/agent-town</code> is the git install, and it needs the repository to be readable by npm.</p>
+<p>The names <code>agentlicense</code>, <code>@agentlicense/<wbr>sdk</code>, and <code>@agentlicense/<wbr>core</code> are the publish names. They are not on the registry until someone pushes a <code>v*</code> tag and the publish workflow runs with an <code>NPM_TOKEN</code> secret. Until then, clone the repository and use pnpm. <code>npm install github:mlescaille/<wbr>agent&#8209;town</code> is the git install, and it needs the repository to be readable by npm.</p>
 <h2>Why does <code>agentlicense dev</code> bind to localhost?</h2>
 <p>The issuer, the policy decision point, and the log share a key directory and trust each other without authentication. That is acceptable for a prototype on <code>127.0.0.1</code> and unsafe anywhere else.</p>
 <h2>What does the website's well-known file mean?</h2>
-<p><code>/.well-known/agent-license.json</code> describes this project for agents that fetch the site. It is proposed, not an IANA registration, and the services do not fetch it. The PDP's <code>/.well-known/authzen-configuration</code> is different: that route exists in the running process and follows OpenID AuthZEN.</p>
+<p><code>/<wbr>.well&#8209;known/<wbr>agent&#8209;license.json</code> describes this project for agents that fetch the site. It is proposed, not an IANA registration, and the services do not fetch it. The PDP's <code>/<wbr>.well&#8209;known/<wbr>authzen&#8209;configuration</code> is different: that route exists in the running process and follows OpenID AuthZEN.</p>
 <h2>What is deliberately unfinished?</h2>
 <p>Revocation before <code>exp</code>, budgets that survive a restart, a mandatory user-request presentation, ancestor scopes embedded so a checkpoint can re-check attenuation, and a second log so a replaced log key is visible to someone who kept an older tree head. Those are listed in the roadmap. This repository is not a production trust service.</p>
     </article>
