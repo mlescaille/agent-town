@@ -574,15 +574,16 @@ a {
 .outcome {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.55rem 0.7rem;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
   margin: 0;
   color: var(--muted);
   font-family: var(--sans);
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.35;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .chip {
@@ -603,6 +604,19 @@ a {
 .chip-deny {
   border-color: var(--deny);
   color: var(--deny);
+}
+
+@media (max-width: 599px) {
+  .outcome {
+    gap: 0.35rem;
+    font-size: 0.8rem;
+  }
+
+  .chip {
+    min-height: 32px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.72rem;
+  }
 }
 
 .term {
@@ -831,14 +845,11 @@ a {
   .outcome {
     position: absolute;
     top: 2.7rem;
+    left: auto;
+    right: auto;
     margin: 0;
     flex-wrap: nowrap;
     white-space: nowrap;
-  }
-
-  .outcome-deny {
-    right: 0;
-    left: auto;
   }
 
   .outcome-slot {
