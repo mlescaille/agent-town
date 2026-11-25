@@ -62,7 +62,8 @@
 
   document.querySelectorAll("[data-copy]").forEach((button) => {
     button.addEventListener("click", async () => {
-      const text = document.getElementById(button.getAttribute("data-copy")).textContent.trim();
+      const source = document.getElementById(button.getAttribute("data-copy"));
+      const text = (source.dataset.full || source.textContent).trim();
       const original = button.getAttribute("aria-label");
       try {
         await navigator.clipboard.writeText(text);
@@ -95,5 +96,9 @@
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") setMenu(false);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!nav.contains(event.target)) setMenu(false);
   });
 })();

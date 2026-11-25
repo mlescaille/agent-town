@@ -2,7 +2,7 @@
 
 Static landing page. It does not import the packages and it has no build step. Fonts are self-hosted. The page makes no network calls except the links you follow.
 
-The credential card decodes the `user_goal` sample from `samples.js` and checks its Ed25519 signature in the browser. `agentlicense` is not published on npm. The install pill is `pnpm i && pnpm build && pnpm exec agentlicense`, which runs inside a clone of this repository.
+The credential card decodes the `user_goal` sample from `samples.js` and checks its Ed25519 signature in the browser. `agentlicense` is not published on npm. The install pill shows `pnpm exec agentlicense`. Copying it copies `pnpm i && pnpm build && pnpm exec agentlicense`, which runs inside a clone of this repository.
 
 ## Preview locally
 
