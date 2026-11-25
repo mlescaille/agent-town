@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Signed mandates that say who an agent is, who it acts for, and what it may do. Checked outside the agent.">
+  <title>Agent License</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body id="top">
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="nav">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Agent License
+    </a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr">Menu</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="https://github.com/mlescaille/agent-town/blob/main/README.md">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a class="btn" href="#quickstart">Get started <span aria-hidden="true">→</span></a>
+    </nav>
+  </header>
+
+  <main id="content">
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <h1><span class="line">Every agent call</span><span class="line narrow">carries a</span><span class="line narrow">license.</span><span class="line wide">carries a license.</span></h1>
+        <p class="sub">Signed mandates that say who an agent is,<br>who it acts for, and what it may do.<br>Checked outside the agent.</p>
+        <div class="hero-actions">
+          <div class="pill">
+            <span class="prompt" aria-hidden="true">&gt;_</span>
+            <code id="install-cmd" data-full="pnpm i &amp;&amp; pnpm build &amp;&amp; pnpm exec agentlicense">pnpm exec agentlicense</code>
+            <button type="button" class="copy" data-copy="install-cmd" aria-label="Copy install command">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </button>
+          </div>
+          <a class="btn" href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Read the spec <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+
+      <div class="card-stage">
+        <article class="credential" id="credential" aria-label="Sample agent credential">
+          <header class="cred-top">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Agent credential</span>
+          </header>
+          <div class="cred-row">
+            <div>
+              <p class="cred-k">Mandate</p>
+              <p class="cred-v" id="cred-mandate">user_goal</p>
+            </div>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+          <div class="cred-row">
+            <div>
+              <p class="cred-k">Acting for</p>
+              <p class="cred-v" id="cred-for">user:alice</p>
+            </div>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+          <div class="cred-row">
+            <div>
+              <p class="cred-k">Scope</p>
+              <p class="cred-v" id="cred-scope">calendar.read</p>
+            </div>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+          <footer class="cred-foot">
+            <div class="signoff">
+              <svg class="sig" viewBox="0 0 150 48" aria-hidden="true">
+                <path d="M3 30c6-16 12-18 16-4 2 8 1 12-5 10-7-2-5-14 6-18 14-6 16 6 20 14 2 5 8 6 12 0 6-10 8 0 14 8 5 6 12 2 20-8 5-6 16 4 24 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="seal" id="seal" data-state="pending">
+              <svg viewBox="0 0 240 240" aria-hidden="true">
+                <circle cx="120" cy="120" r="112" fill="none" stroke="currentColor" stroke-width="2.6"/>
+                <circle cx="120" cy="120" r="64" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                <path id="seal-top" d="M35,80 A94,94 0 0 1 205,80" fill="none"/>
+                <path id="seal-bot" d="M35,160 A94,94 0 0 0 205,160" fill="none"/>
+                <text fill="currentColor" font-family="Inter, sans-serif" font-weight="700" font-size="16" letter-spacing="2.2">
+                  <textPath href="#seal-top" startOffset="50%" text-anchor="middle">VERIFIED</textPath>
+                </text>
+                <text fill="currentColor" font-family="Inter, sans-serif" font-weight="700" font-size="16" letter-spacing="2.2">
+                  <textPath href="#seal-bot" startOffset="50%" text-anchor="middle">OUTSIDE THE AGENT</textPath>
+                </text>
+                <circle cx="32" cy="120" r="3.2" fill="currentColor"/>
+                <circle cx="208" cy="120" r="3.2" fill="currentColor"/>
+                <path d="M92 126 L112 146 L158 96" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="sr" id="seal-status">Checking the sample signature.</span>
+            </div>
+          </footer>
+          <p class="issued">Issued by <span>mlescaille/agent-town</span></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section wrap" id="mandates">
+      <h2>Three mandates</h2>
+      <div class="mandates">
+        <article>
+          <h3>direct_request:</h3>
+          <p>the user asked for this exact action</p>
+        </article>
+        <article>
+          <h3>user_goal:</h3>
+          <p>the user set the goal, the agent picks the steps</p>
+        </article>
+        <article>
+          <h3>agent_initiated:</h3>
+          <p>the agent acts on its own, read-only by default</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section wrap" id="delegation">
+      <h2>Sub-agents say who they are</h2>
+      <blockquote class="quote">
+        <p>“I am <span class="hop">Researcher (subagent-123)</span>, acting on behalf of <span class="hop">Planner (planner-1)</span>, on behalf of <span class="hop">user:alice</span>, requesting <span class="hop">documents.search</span>.”</p>
+      </blockquote>
+      <p class="note">This sentence ships in <a href="https://github.com/mlescaille/agent-town/pull/1">pull request #1</a>. It is not on main yet.</p>
+    </section>
+
+    <section class="section wrap" id="check">
+      <h2>How a check works</h2>
+      <ol class="flow">
+        <li class="step"><span class="step-name">License</span></li>
+        <li class="join" aria-hidden="true"><span class="arrow-line"></span><svg class="arrow-head" viewBox="0 0 8 12"><path d="M1 1.2 6.5 6 1 10.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="arrow-v" viewBox="0 0 12 28"><path d="M6 1v18M1.2 14.5 6 25 10.8 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
+        <li class="step">
+          <span class="step-name">Checkpoint</span>
+          <p class="outcome outcome-allow"><span class="chip chip-allow">ALLOW</span> <span>in scope</span></p>
+        </li>
+        <li class="join" aria-hidden="true"><span class="arrow-line"></span><svg class="arrow-head" viewBox="0 0 8 12"><path d="M1 1.2 6.5 6 1 10.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="arrow-v" viewBox="0 0 12 28"><path d="M6 1v18M1.2 14.5 6 25 10.8 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
+        <li class="step">
+          <span class="step-name">Policy</span>
+          <p class="outcome outcome-deny"><span class="chip chip-deny">DENY task_widened</span> <span>asks for more than its parent</span></p>
+        </li>
+        <li class="join" aria-hidden="true"><span class="arrow-line"></span><svg class="arrow-head" viewBox="0 0 8 12"><path d="M1 1.2 6.5 6 1 10.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="arrow-v" viewBox="0 0 12 28"><path d="M6 1v18M1.2 14.5 6 25 10.8 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
+        <li class="step"><span class="step-name">Log</span></li>
+      </ol>
+    </section>
+
+    <section class="section wrap" id="quickstart">
+      <h2>Quickstart</h2>
+      <div class="term" id="quickstart-script" role="region" aria-label="Commands that work in this repository">
+        <button type="button" class="term-copy" data-copy="quickstart-script" title="Copy commands" aria-label="Copy quickstart commands">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+          <span class="copy-label">Copy</span>
+        </button>
+        <div class="term-scroll">
+        <pre><code>git clone https://github.com/mlescaille/agent-town.git</code></pre>
+        <pre><code>cd agent-town &amp;&amp; pnpm i &amp;&amp; pnpm build</code></pre>
+        <pre><code>pnpm exec agentlicense keys init</code></pre>
+        <pre><code>pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate user_goal \
+  --goal "Summarize the primary calendar" \
+  --actions calendar.read,calendar.create \
+  --locations calendar:primary \
+  --budget 10 \
+  --ttl 3600 &gt; license.jwt</code></pre>
+        <pre><code>pnpm exec agentlicense check \
+  --license "$(cat license.jwt)" \
+  --action calendar.read \
+  --location calendar:primary \
+  --why "Reading today's events is how the summary gets its facts."</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <nav aria-label="Footer">
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+    </nav>
+  </footer>
+
+  <script src="samples.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
