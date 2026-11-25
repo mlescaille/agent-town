@@ -3,6 +3,7 @@ import { sha256Prefixed } from "./encoding.js";
 import { LicenseError } from "./errors.js";
 import { signJws, verifyJws } from "./jws.js";
 import { newId } from "./keys.js";
+import { canonicalStatement } from "./statement.js";
 import type { JustificationClaims, LicenseClaims, OkpPrivateJwk, OkpPublicJwk } from "./types.js";
 import { checkTimeWindow, parseJustificationClaims } from "./validate.js";
 
@@ -14,6 +15,8 @@ export interface CreateJustificationInput {
   why: string;
   basis: JustificationClaims["basis"];
   goal?: string;
+  /** Exact sentence. Omitted means the canonical sentence for this license and call. */
+  statement?: string;
   ttlSeconds?: number;
   now?: number;
   jti?: string;
@@ -40,6 +43,14 @@ export function createJustification(input: CreateJustificationInput): string {
     action: input.action,
     location: input.location,
     why: input.why,
+    statement:
+      input.statement ??
+      canonicalStatement({
+        license: input.license,
+        action: input.action,
+        resource: input.location,
+        reason: input.why,
+      }),
   };
   if (input.goal !== undefined) payload.goal = input.goal;
   const claims = parseJustificationClaims(payload);

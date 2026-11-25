@@ -4,9 +4,9 @@ Status: prototype profile. This document is the normative description of the tok
 
 ## 1. Roles
 
-- **User.** The person identified by `sub`. The user signs one originating request.
+- **User.** The person identified by `sub`. The user signs one originating request. The license principal is that user, or an office that names that user.
 - **Issuer.** A service distinct from every agent. Only the issuer signs licenses. Agents never do.
-- **Agent.** The holder of a license, identified by a SPIFFE-style id. The agent signs a justification for each call.
+- **Agent.** The holder of a license, identified by a SPIFFE-style id. Each hop also names the concrete run and the role it was given. The agent signs a justification for each call, including the sentence that says who it is and whom it acts for.
 - **Checkpoint.** A policy enforcement point outside the agent process. It verifies the license and the justification, asks a policy decision point, and writes the decision to the log before it forwards the call.
 - **Policy decision point.** An OpenID AuthZEN 1.0 endpoint that evaluates Cedar policies.
 - **Log.** An append-only Merkle tree of decisions. The log signs each tree head.
@@ -52,6 +52,8 @@ A location matches `^[a-z][a-z0-9_-]*:[A-Za-z0-9._-]+` and means `resourceType:r
 
 Token ids (`jti`, `txn`, `parent_jti`) match `^[A-Za-z0-9_-]{8,80}$`.
 
+A run id (`instance`) matches `^[A-Za-z][A-Za-z0-9_-]{0,80}$`, for example `subagent-123`. A role name (`name`) matches `^[A-Za-z][A-Za-z0-9 .'-]{0,79}$`, for example `Researcher`. An office name matches `^[A-Za-z0-9][A-Za-z0-9 .,'()&-]{0,198}$`. A hop `task` is 1 to 1000 characters and contains no ASCII control characters.
+
 ## 4. Originating user request
 
 The user signs one request. The license is bound to that exact compact JWS, not to a re-encoding of it.
@@ -79,6 +81,8 @@ The user signs one request. The license is bound to that exact compact JWS, not 
 
 `iss` and `sub` are the same user id. `aud` is the issuer. `authorization_details` has exactly one element. `exp` is after `iat`.
 
+The request may also carry `principal`, `name`, `instance`, and `task`. All four are optional. When `principal` is present its `user` MUST equal `sub`. The issuer copies a present principal onto the license and uses `name`, `instance`, and `task` for the root hop. Omitted hop fields are filled by the issuer: the role name is the agent slug with an initial capital, the instance is `run-<slug>`, and the task is the goal, `Perform <action> on <location>` for `direct_request`, or `Act within the agent-initiated ceiling`.
+
 The request hash is `sha-256:` concatenated with unpadded base64url(SHA-256(UTF-8 bytes of the compact JWS)).
 
 ## 5. License
@@ -95,7 +99,14 @@ The issuer verifies the user request, checks that the named agent key is enrolle
   "exp": 1700003600,
   "jti": "lic_0123456789abcdef0123456789abcdef",
   "agent": "spiffe://agent-license.example/agent/planner",
-  "act": { "sub": "spiffe://agent-license.example/agent/planner" },
+  "principal": { "type": "user", "user": "user:alice" },
+  "act": {
+    "sub": "spiffe://agent-license.example/agent/planner",
+    "instance": "run-planner",
+    "name": "Planner",
+    "task": "Summarize the primary calendar",
+    "on_behalf_of": { "type": "user", "user": "user:alice" }
+  },
   "mandate": { "type": "user_goal", "goal": "Summarize the primary calendar" },
   "authorization_details": [
     {
@@ -112,13 +123,54 @@ The issuer verifies the user request, checks that the named agent key is enrolle
 
 `txn` is the user request's `jti`. It is the transaction identifier in the sense of an OAuth transaction token: one id for the originating request. `req_hash` binds that id to the signed bytes. An attenuated license adds `parent_jti`, the `jti` of the parent license.
 
+`principal.user` MUST equal `sub`. A user principal is `{ "type": "user", "user", "name"? }`. An office principal is `{ "type": "org", "name", "user" }`, for example `{ "type": "org", "name": "Office of A. Example, Attorney at Law", "user": "user:alice" }`. `name` on a user principal is an optional display name. The office `name` is required. No other principal type is defined.
+
 ### 5.1 Delegation chain
 
-`act` is the actor claim from RFC 8693. The outermost `act.sub` is the current actor and MUST equal `agent`. A nested `act` is the prior actor. The deepest `act` is the original agent. Only `sub` and a nested `act` are allowed inside the claim. The chain is at most eight agents, and no agent id repeats.
+`act` is the actor claim from RFC 8693, extended so each hop says which concrete run is speaking, what role it was given, what it was asked to do, and who it acts for. The outermost object is the current actor. Its `sub` MUST equal `agent`. A hop is:
 
-A root license has a single `act` and no `parent_jti`. An attenuated license has `parent_jti` and at least two actors.
+| Field | Rule |
+| --- | --- |
+| `sub` | SPIFFE-style agent id |
+| `instance` | Concrete run id, for example `subagent-123` |
+| `name` | Human-readable role, for example `Researcher` |
+| `task` | What this hop was delegated to do |
+| `on_behalf_of` | The next hop up. Either another hop, or the principal |
 
-Displayed from the user outward, the chain is `sub`, then the actors from deepest to outermost. The last id is the agent that may present the license.
+Only those fields are allowed. The chain is at most eight agent hops, and no agent id repeats. Walking `on_behalf_of` MUST end at a principal equal to `principal`. A hop that lacks `instance`, `name`, `task`, or `on_behalf_of`, or a walk that does not end at that principal, is `chain_incomplete`.
+
+A child hop's `task` MUST narrow its parent hop's task. Narrowing means the child text starts with the parent text, is strictly longer, and the first added character is a space, colon, comma, semicolon, period, or opening parenthesis. Replacing the parent text, shortening it, or copying it unchanged is `task_widened`. The root hop has no parent task. v1 does not interpret the words; the prefix is the whole check.
+
+A root license has one hop, `on_behalf_of` equal to `principal`, and no `parent_jti`. An attenuated license has `parent_jti` and at least two hops. The child's `on_behalf_of` is the parent's entire `act`.
+
+An office chain, outermost hop first:
+
+```json
+"principal": {
+  "type": "org",
+  "name": "Office of A. Example, Attorney at Law",
+  "user": "user:alice"
+},
+"act": {
+  "sub": "spiffe://agent-license.example/agent/researcher",
+  "instance": "subagent-123",
+  "name": "Researcher",
+  "task": "Prepare a summary of the matter file: search the matter documents for the cited exhibit",
+  "on_behalf_of": {
+    "sub": "spiffe://agent-license.example/agent/planner",
+    "instance": "planner-1",
+    "name": "Planner",
+    "task": "Prepare a summary of the matter file",
+    "on_behalf_of": {
+      "type": "org",
+      "name": "Office of A. Example, Attorney at Law",
+      "user": "user:alice"
+    }
+  }
+}
+```
+
+Read as a sentence, that chain is: `I am Researcher (subagent-123), acting on behalf of Planner (planner-1), on behalf of Office of A. Example, Attorney at Law (user:alice).`
 
 ### 5.2 Authorization details
 
@@ -159,20 +211,17 @@ The justification `basis` MUST be `agent`. A `goal` field is a mismatch: the age
 
 ## 7. Attenuation
 
-A sub-agent license is signed by the issuer, not by the parent agent. The issuer verifies the parent license and then signs the child. The child copies `sub`, `mandate`, `txn`, and `req_hash` unchanged. It sets `agent` to the child, `parent_jti` to the parent's `jti`, and:
+A sub-agent license is signed by the issuer, not by the parent agent. The issuer verifies the parent license and then signs the child. The child copies `sub`, `principal`, `mandate`, `txn`, and `req_hash` unchanged. It sets `agent` to the child, `parent_jti` to the parent's `jti`, and `on_behalf_of` to the parent's `act`. The new hop carries the child's `sub`, `instance`, `name`, and `task`. The caller supplies those three; when it does not, the issuer uses the same name and instance defaults as issuance, and sets the task to `<parent task> for <name> (<instance>)`, which is a narrowing of the parent task.
 
-```json
-"act": { "sub": "<child>", "act": <parent.act> }
-```
-
-The child agent MUST NOT already appear in the parent chain.
+The child agent MUST NOT already appear in the parent chain. A child task that is not a narrowing is `task_widened` and is not signed. The checkpoint applies the same rule to a license that was signed some other way, so a widened task cannot be presented.
 
 Narrowing is mandatory and one-way:
 
 - Every child action is in the parent action set, and every child location is in the parent location set. Adding either is `scope_widen`.
 - If the parent sets `max_calls`, the child MUST set `max_calls` less than or equal to it. Dropping the cap or raising it is `budget_widen`. Adding a cap the parent did not have is a narrowing.
 - `exp` MUST be less than or equal to the parent `exp`, and greater than the child's `nbf`. A later expiry is `expiry_widen`.
-- At least one of these is strict: fewer actions, fewer locations, a lower cap, or an earlier `exp`. An equal copy is `not_narrowed`.
+- The child `task` MUST be a narrowing of the parent hop's `task`, as in section 5.1. Otherwise the code is `task_widened`.
+- At least one of these is strict: fewer actions, fewer locations, a lower cap, or an earlier `exp`. An equal copy is `not_narrowed`. A narrower task does not by itself satisfy this scope rule.
 
 Changing `mandate.type`, the goal text, the user, the transaction id, or the request hash is not possible through this operation because those fields are copied. A `direct_request` child therefore keeps the single action; it can still be narrower by budget or expiry.
 
@@ -196,11 +245,22 @@ The agent signs a new justification for each presentation. Its lifetime (`exp - 
   "action": "calendar.read",
   "location": "calendar:primary",
   "why": "Reading the calendar is how the summary is produced.",
+  "statement": "I am Planner (run-planner), acting on behalf of user:alice, requesting calendar.read on calendar:primary because Reading the calendar is how the summary is produced.",
   "goal": "Summarize the primary calendar"
 }
 ```
 
 `iss` is the licensed agent. `why` is 12 to 500 characters. `action` and `location` are the call being made, not a description of some other call. `txn`, `req_hash`, `sub`, `license_jti`, and `mandate_type` MUST equal the license. `goal` is present only for `user_goal`.
+
+`statement` is required. It is the sentence the checkpoint renders from the signed license and this call, and it MUST match that rendering exactly, character for character:
+
+```text
+I am {name} ({instance}), acting on behalf of {parent name} ({instance}), on behalf of {further hops}, on behalf of {principal}, requesting {action} on {resource} because {reason}.
+```
+
+`{name}` and `{instance}` are the outermost hop. Each earlier agent hop follows. The first link uses `acting on behalf of`. Every later hop, including the principal, uses `on behalf of`. A license with one hop has no earlier agent, so the principal is the only `acting on behalf of` phrase. `{principal}` is `user:<name>` for a user principal with no display name, `{name} ({user})` for a user principal that has a display name, and `{office name} ({user})` for an office. `{resource}` is the call location (`type:id`). `{reason}` is `why`. The sentence ends with one period: if `why` already ends with `.`, that period is kept and a second one is not added.
+
+The checkpoint builds that sentence itself. It does not trust the agent to describe the chain. A difference, including a forged instance or a missing clause, is `identity_mismatch`. An empty `statement` is the same code.
 
 `basis` is `user_request`, `user_goal`, or `agent`, and it MUST match section 6. A mismatch is `justification_mismatch` even when the action is inside the scope. That is the check of the justification against the originating request: the justification is tied to the request id and hash, and it may not claim a different kind of user instruction than the signed request recorded.
 
@@ -223,15 +283,16 @@ The checkpoint accepts `POST /v1/invoke` with headers `Agent-License` and `Agent
 
 Order of structural checks:
 
-1. License signature, `typ`, issuer, audience, lifetime, agent id, `act` chain, mandate shape, and the agent-initiated ceiling.
+1. License signature, `typ`, issuer, audience, lifetime, agent id, `act` chain, mandate shape, and the agent-initiated ceiling. A hop missing `instance`, `name`, `task`, or `on_behalf_of`, or a chain that does not end at `principal`, is `chain_incomplete`. A hop task that is not a narrowing of its parent hop is `task_widened`.
 2. Justification signature under the enrolled key of `license.agent`, lifetime, and equality of the binding fields in section 8.
 3. Replay of `justification.jti`.
-4. Mandate basis and goal rules.
-5. Scope, including the exact action pair for `direct_request`.
-6. `budget.max_calls` against the number of allows already recorded for this license `jti` in this process.
-7. The user-request JWS, when one was presented.
+4. `statement` against the sentence rendered from the signed license and this call. A difference is `identity_mismatch`.
+5. Mandate basis and goal rules.
+6. Scope, including the exact action pair for `direct_request`.
+7. `budget.max_calls` against the number of allows already recorded for this license `jti` in this process.
+8. The user-request JWS, when one was presented.
 
-Stable `code` values include `missing_license`, `missing_justification`, `bad_signature`, `expired`, `not_yet_valid`, `act_chain`, `bad_agent_id`, `mandate_invalid`, `justification_mismatch`, `justification_replay`, `over_scope`, `budget_exceeded`, `request_hash_mismatch`, `policy_deny`, and `pdp_unreachable`. A structural failure is reported even if Cedar would also have denied. If the structure passes and Cedar denies, the code is `policy_deny`. If the policy decision point cannot be reached, the checkpoint fails closed.
+Stable `code` values include `missing_license`, `missing_justification`, `bad_signature`, `expired`, `not_yet_valid`, `act_chain`, `chain_incomplete`, `task_widened`, `bad_agent_id`, `mandate_invalid`, `identity_mismatch`, `justification_mismatch`, `justification_replay`, `over_scope`, `budget_exceeded`, `request_hash_mismatch`, `policy_deny`, and `pdp_unreachable`. A structural failure is reported even if Cedar would also have denied. If the structure passes and Cedar denies, the code is `policy_deny`. If the policy decision point cannot be reached, the checkpoint fails closed.
 
 ## 10. AuthZEN and Cedar
 
@@ -315,11 +376,12 @@ Each appended record is:
   "action": "calendar.read",
   "location": "calendar:primary",
   "policy_decision": "allow",
-  "why": "Reading the calendar is how the summary is produced."
+  "why": "Reading the calendar is how the summary is produced.",
+  "statement": "I am Planner (run-planner), acting on behalf of user:alice, requesting calendar.read on calendar:primary because Reading the calendar is how the summary is produced."
 }
 ```
 
-`decision` is `allow` or `deny`. `policy_decision` is `allow`, `deny`, or `not_evaluated`. `justification_hash` is the hash of the justification JWS, or an empty string when there was none. `why` is the justification text the checkpoint accepted, or empty when the call never got that far. `license_jti` is the license id.
+`decision` is `allow` or `deny`. `policy_decision` is `allow`, `deny`, or `not_evaluated`. `justification_hash` is the hash of the justification JWS, or an empty string when there was none. `why` is the justification text the checkpoint accepted, or empty when the call never got that far. `statement` is the canonical who-for-whom-what sentence from section 8. It is empty when the checkpoint could not render one, which is what happens when the chain itself is incomplete. When the agent's sentence differed, the log still stores the canonical sentence, not the forged one. `license_jti` is the license id. Replay of the log therefore shows a readable line for each call that had a complete chain.
 
 After every append the log signs a tree head. The payload is:
 

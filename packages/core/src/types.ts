@@ -53,10 +53,35 @@ export interface AuthorizationDetail {
   budget?: Budget;
 }
 
-/** RFC 8693 actor claim. The outermost `sub` is the current actor. */
+/**
+ * The accountable party at the end of a delegation chain.
+ * `user` is always `user:<name>`. An office names that user as well as the office.
+ */
+export interface UserPrincipal {
+  type: "user";
+  user: string;
+  name?: string;
+}
+
+export interface OrgPrincipal {
+  type: "org";
+  name: string;
+  user: string;
+}
+
+export type Principal = UserPrincipal | OrgPrincipal;
+
+/**
+ * One hop of an RFC 8693 actor claim. The outermost hop is the agent presenting
+ * the license. `on_behalf_of` is the next hop up: another agent hop, or the
+ * principal the chain terminates at.
+ */
 export interface ActClaim {
   sub: string;
-  act?: ActClaim;
+  instance: string;
+  name: string;
+  task: string;
+  on_behalf_of: ActClaim | Principal;
 }
 
 /** Compact JWS signed by the user. Binds the license to one originating request. */
@@ -70,6 +95,11 @@ export interface UserRequestClaims {
   agent: string;
   mandate: Mandate;
   authorization_details: AuthorizationDetail[];
+  /** Set when the user named an office, or a concrete run of the root agent. */
+  principal?: Principal;
+  name?: string;
+  instance?: string;
+  task?: string;
 }
 
 /** License claims. Signed by the issuer, never by the agent. */
@@ -82,6 +112,8 @@ export interface LicenseClaims {
   iat: number;
   jti: string;
   agent: string;
+  /** Accountable party. `principal.user` equals `sub`. */
+  principal: Principal;
   act: ActClaim;
   mandate: Mandate;
   authorization_details: AuthorizationDetail[];
@@ -109,6 +141,11 @@ export interface JustificationClaims {
   action: string;
   location: string;
   why: string;
+  /**
+   * Canonical sentence the checkpoint renders from the license and this call.
+   * The agent must present this exact text.
+   */
+  statement: string;
   goal?: string;
 }
 
@@ -135,6 +172,8 @@ export interface Assessment {
   action: string;
   location: string;
   why: string;
+  /** Canonical who-for-whom-what sentence, or empty when the chain could not be rendered. */
+  statement: string;
   flags: CheckpointFlags;
   license?: LicenseClaims;
   justification?: JustificationClaims;
@@ -158,6 +197,8 @@ export interface DecisionRecord {
   location: string;
   policy_decision: "allow" | "deny" | "not_evaluated";
   why: string;
+  /** Canonical who-for-whom-what sentence. Empty when the checkpoint could not render one. */
+  statement: string;
 }
 
 export interface SignedTreeHeadClaims {

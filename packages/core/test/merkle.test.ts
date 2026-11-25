@@ -119,5 +119,7 @@ function record(index: number): Omit<DecisionRecord, "index" | "v"> {
     location: "calendar:primary",
     policy_decision: index % 2 === 0 ? "allow" : "deny",
     why: "The call was checked against the signed license.",
+    statement:
+      "I am Planner (run-planner), acting on behalf of user:alice, requesting calendar.read on calendar:primary because The call was checked against the signed license.",
   };
 }

@@ -36,7 +36,7 @@ A license carries exactly one:
 | `user_goal` | The user set a goal. The agent chooses calls inside the granted scope. The justification must restate that goal. |
 | `agent_initiated` | The agent is acting on its own, inside a fixed narrow ceiling: `clock.read`, `catalog.list`, and `memory.read`. |
 
-A sub-agent can receive only a narrower license. Scope, budget, and expiry can shrink. They cannot grow, and the mandate type cannot change. The delegation chain is an RFC 8693 `act` claim: the outermost actor is the agent presenting the license.
+A sub-agent can receive only a narrower license. Scope, budget, expiry, and the delegated task can shrink. They cannot grow, and the mandate type cannot change. The delegation chain is an RFC 8693 `act` claim. Each hop carries the agent id, the concrete run (`instance`), the role (`name`), the task, and `on_behalf_of` the next hop, ending at the user or at an office that names the user. A call's justification repeats that chain as one sentence, and the checkpoint rebuilds the sentence from the signed license.
 
 The byte-level rules are in [spec/LICENSE-FORMAT.md](spec/LICENSE-FORMAT.md).
 
@@ -98,11 +98,16 @@ Hand a narrower license to a sub-agent:
 pnpm exec agentlicense attenuate \
   --parent "$(cat license.jwt)" \
   --agent researcher \
+  --name Researcher \
+  --instance subagent-123 \
+  --task "Summarize the primary calendar: read today's events" \
   --actions calendar.read \
   --locations calendar:primary \
   --budget 3 \
   --ttl 600 > child.jwt
 ```
+
+`inspect` prints the chain as a sentence: who is acting, for whom, up to the principal.
 
 `agentlicense dev` starts the issuer, checkpoint, Cedar PDP, Merkle log, and a demo tool on `127.0.0.1` ports `43121` through `43125`. `agentlicense log verify --url http://127.0.0.1:43124` replays that log. The scripted walkthrough below exercises the same services on ephemeral ports.
 
@@ -112,7 +117,7 @@ pnpm exec agentlicense attenuate \
 pnpm demo
 ```
 
-The demo issues all three mandate types, allows an in-scope call for each, denies an over-scope call, denies a justification whose basis does not match the mandate, denies a call with no license, attenuates `planner` to `researcher`, rejects an attempt to add `mail.send`, allows the narrowed sub-agent call, denies a call the attenuated license dropped, and replays the log. A flipped leaf fails verification. The last line is `demo: ok`.
+The demo issues all three mandate types, allows an in-scope call for each, denies an over-scope call, denies a justification whose basis does not match the mandate, denies a call with no license, attenuates `planner` to `researcher`, rejects an attempt to add `mail.send`, allows the narrowed sub-agent call, and denies a call the attenuated license dropped. It then runs an office scenario: the principal is `Office of A. Example, Attorney at Law`, a planner delegates to researcher run `subagent-123`, and that run's document search is allowed only when its statement matches the chain. A forged instance, a hop with no `on_behalf_of`, and a widened task are denied. The log replay includes those decisions and the office sentence. A flipped leaf fails verification. The last line is `demo: ok`.
 
 ## Layout
 
@@ -135,7 +140,7 @@ The demo issues all three mandate types, allows an in-scope call for each, denie
 pnpm test
 ```
 
-Vitest covers signature verification, attenuation that refuses to widen, the three mandate rules (including a mismatched justification and an exhausted budget), RFC 9162 inclusion and consistency proofs through 32-leaf trees, the AuthZEN/Cedar decisions, and `licensed(fetch)`.
+Vitest covers signature verification, attenuation that refuses to widen, the three mandate rules (including a mismatched justification and an exhausted budget), delegation statements (`identity_mismatch`, `chain_incomplete`, and `task_widened`), RFC 9162 inclusion and consistency proofs through 32-leaf trees, the AuthZEN/Cedar decisions, and `licensed(fetch)`.
 
 ## SDK
 
