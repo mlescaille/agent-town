@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const ID_BLOCK = /@id\("([^"]+)"\)\s*([\s\S]*?)(?=@id\("|$)/g;
@@ -19,7 +19,17 @@ export function policiesFromText(text: string): Record<string, string> {
 }
 
 export function defaultPolicyPath(): string {
-  return fileURLToPath(new URL("../../../policies/mandates.cedar", import.meta.url));
+  const fromHere = (relative: string) => fileURLToPath(new URL(relative, import.meta.url));
+  const candidates = [
+    process.env.AGENT_LICENSE_POLICY,
+    fromHere("../../../policies/mandates.cedar"),
+    fromHere("../policies/mandates.cedar"),
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+  const found = candidates.find((candidate) => existsSync(candidate));
+  if (!found) {
+    throw new Error(`Cedar policy not found. Set AGENT_LICENSE_POLICY. Looked in ${candidates.join(", ")}`);
+  }
+  return found;
 }
 
 export function loadPolicies(path = defaultPolicyPath()): Record<string, string> {

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#000000">
+  <title>Quickstart · Agent License</title>
+  <meta name="description" content="Install Agent License, create keys, and issue a signed agent credential you can inspect and check.">
+  <link rel="canonical" href="https://mlescaille.github.io/agent-town/docs/quickstart/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Quickstart">
+  <meta property="og:description" content="Install Agent License, create keys, and issue a signed agent credential you can inspect and check.">
+  <meta property="og:url" content="https://mlescaille.github.io/agent-town/docs/quickstart/">
+  <meta property="og:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quickstart">
+  <meta name="twitter:description" content="Install Agent License, create keys, and issue a signed agent credential you can inspect and check.">
+  <meta name="twitter:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../../fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"Agent License","description":"Signed agent licenses for agent identity, delegated authority, and on-behalf-of calls, checked outside the agent.","codeRepository":"https://github.com/mlescaille/agent-town","programmingLanguage":"TypeScript","runtimePlatform":"Node.js","license":"https://spdx.org/licenses/MIT.html","version":"0.1.0"},{"@type":"SoftwareApplication","name":"agentlicense","applicationCategory":"DeveloperApplication","operatingSystem":"any","softwareVersion":"0.1.0","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareRequirements":"Node.js >= 22","codeRepository":"https://github.com/mlescaille/agent-town"},{"@type":"TechArticle","headline":"Quickstart","description":"Install Agent License, create keys, and issue a signed agent credential you can inspect and check.","url":"https://mlescaille.github.io/agent-town/docs/quickstart/","isPartOf":"https://mlescaille.github.io/agent-town/"}]}</script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="nav">
+    <a class="brand" href="../../">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Agent License
+    </a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr">Menu</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a class="btn" href="../../docs/quickstart/">Get started <span aria-hidden="true">→</span></a>
+    </nav>
+  </header>
+  <main class="doc" id="content">
+    <div class="doc-nav-wrap">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a href="../quickstart/" aria-current="page">Quickstart</a>
+      <a href="../concepts/">Concepts</a>
+      <a href="../cli/">CLI</a>
+      <a href="../sdk/">SDK</a>
+      <a href="../checkpoint/">Checkpoint</a>
+      <a href="../faq/">FAQ</a>
+    </nav>
+    </div>
+    <article class="prose">
+<h1>Quickstart</h1>
+<p>These commands issue a license, show who it names, and dry-run one call. They run on your machine. Nothing listens on a public address.</p>
+<p>You need Node.js 22 or newer and pnpm 9. The packages are not on the npm registry yet. Names reserved for publish are <code>agentlicense</code>, <code>@agentlicense/<wbr>sdk</code>, and <code>@agentlicense/<wbr>core</code>.</p>
+<h2>Install from a clone</h2>
+<div class="term" id="term-quickstart-1" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-1" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>git clone \
+  https://github.com/mlescaille/agent-town.git
+cd agent-town
+pnpm install
+pnpm build
+pnpm exec agentlicense --help</code></pre></div></div>
+<p><code>pnpm install</code> builds the packages. The repository is private until its owner makes it public, so the clone works for people who already have access. After a publish, the same CLI is <code>npm install &#8209;g agentlicense</code>.</p>
+<p><code>npm install github:mlescaille/<wbr>agent&#8209;town</code> installs this repository as a package and builds it, once npm can read the repository. The command name is still <code>agentlicense</code>.</p>
+<h2>Keys</h2>
+<div class="term" id="term-quickstart-2" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-2" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense keys init</code></pre></div></div>
+<p>That writes Ed25519 keys for an issuer, a log, <code>user:alice</code>, and two agents (<code>planner</code> and <code>researcher</code>) under <code>.agent&#8209;license/<wbr></code>. The directory is local and is not committed.</p>
+<h2>Issue a user_goal license</h2>
+<p>The user key signs the request. The issuer key signs the license. The compact JWS is printed on stdout.</p>
+<div class="term" id="term-quickstart-3" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-3" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate user_goal \
+  --goal &quot;Summarize the primary calendar&quot; \
+  --actions calendar.read,calendar.create \
+  --locations calendar:primary \
+  --budget 10 \
+  --ttl 3600 &gt; license.jwt</code></pre></div></div>
+<h2>Inspect</h2>
+<div class="term" id="term-quickstart-4" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-4" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense inspect &quot;$(cat license.jwt)&quot;</code></pre></div></div>
+<p><code>inspect</code> prints the agent id, the user, the mandate, the scope, and the delegation chain. With the key directory in place it also checks the issuer signature.</p>
+<h2>Check a call</h2>
+<p>This asks the Cedar policy without starting the services and without writing the log.</p>
+<div class="term" id="term-quickstart-5" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-5" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense check \
+  --license &quot;$(cat license.jwt)&quot; \
+  --action calendar.read \
+  --location calendar:primary \
+  --why &quot;Reading today's events is how the summary gets its facts.&quot;</code></pre></div></div>
+<p>A call outside the license is denied:</p>
+<div class="term" id="term-quickstart-6" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-6" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense check \
+  --license &quot;$(cat license.jwt)&quot; \
+  --action mail.send \
+  --location mail:outbox \
+  --why &quot;Sending mail is outside the calendar summary.&quot;</code></pre></div></div>
+<h2>Hand a narrower license to a sub-agent</h2>
+<p>Scope, budget, and expiry can shrink. They cannot grow, and the mandate type stays the same.</p>
+<div class="term" id="term-quickstart-7" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-7" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense attenuate \
+  --parent &quot;$(cat license.jwt)&quot; \
+  --agent researcher \
+  --actions calendar.read \
+  --locations calendar:primary \
+  --budget 3 \
+  --ttl 600 &gt; child.jwt</code></pre></div></div>
+<div class="term" id="term-quickstart-8" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-8" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense inspect &quot;$(cat child.jwt)&quot;</code></pre></div></div>
+<div class="term" id="term-quickstart-9" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-9" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense check \
+  --license &quot;$(cat child.jwt)&quot; \
+  --action calendar.read \
+  --location calendar:primary \
+  --why &quot;The sub-agent only reads the calendar it was given.&quot;</code></pre></div></div>
+<h2>The other two mandates</h2>
+<p><code>direct_request</code> names one action and one location. The checkpoint allows only that pair.</p>
+<div class="term" id="term-quickstart-10" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-10" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate direct_request \
+  --action calendar.read \
+  --location calendar:primary \
+  --budget 1 \
+  --ttl 600 &gt; direct.jwt</code></pre></div></div>
+<p><code>agent_initiated</code> is the agent acting on its own, inside a fixed read-only ceiling.</p>
+<div class="term" id="term-quickstart-11" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-11" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate agent_initiated \
+  --actions clock.read,catalog.list,memory.read \
+  --locations clock:local,catalog:public,memory:self \
+  --budget 5 \
+  --ttl 600 &gt; initiated.jwt</code></pre></div></div>
+<h2>Verify the log</h2>
+<p><code>check</code> does not append decisions. <code>log verify</code> with no server replays the files under <code>.agent&#8209;license/<wbr>log/<wbr></code>. Right after <code>keys init</code> that log is empty, and an empty log still verifies.</p>
+<div class="term" id="term-quickstart-12" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-quickstart-12" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense log verify</code></pre></div></div>
+<p>To append decisions, start the stack with <code>agentlicense dev</code> and then verify the URL. That is covered in <a href="../checkpoint/">Running a checkpoint</a>.</p>
+    </article>
+  </main>
+  <footer class="foot">
+    <nav aria-label="Footer">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+    </nav>
+  </footer>
+  <script src="../../nav.js"></script>
+</body>
+</html>

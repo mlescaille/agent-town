@@ -10,7 +10,7 @@ import {
   readJson,
   requestUrl,
   sendJson,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 export interface Running {
   url: string;

@@ -2,21 +2,26 @@
   "name": "agent-license",
   "private": true,
   "version": "0.1.0",
-  "description": "Verifiable mandates for AI agents: signed licenses, attenuation, AuthZEN checkpoints, and a Merkle decision log.",
+  "description": "Signed agent licenses: who is calling, who they act for, and what they may do. Checked outside the agent.",
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=22"
   },
+  "bin": {
+    "agentlicense": "./packages/cli/dist/main.js"
+  },
   "scripts": {
-    "build": "pnpm -r run build",
+    "build": "node scripts/build.mjs",
     "test": "vitest run",
     "demo": "node examples/demo/dist/main.js",
-    "agentlicense": "node packages/cli/dist/main.js"
+    "render-docs": "node scripts/render-docs.mjs",
+    "agentlicense": "node packages/cli/dist/main.js",
+    "prepare": "node scripts/prepare.mjs"
   },
   "devDependencies": {
-    "@agent-license/cli": "workspace:*",
     "@types/node": "^22.10.5",
+    "esbuild": "^0.25.12",
     "typescript": "^5.7.2",
     "vitest": "^3.0.5"
   }

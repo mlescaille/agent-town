@@ -16,6 +16,6 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@agent-license/core": "workspace:*"
+    "@agentlicense/core": "workspace:*"
   }
 }

@@ -1,0 +1,35 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - name: Require the tag to match the package version
+        run: |
+          version=$(node -p "require('./packages/core/package.json').version")
+          test "$GITHUB_REF_NAME" = "v$version"
+          test "$version" = "$(node -p "require('./packages/sdk/package.json').version")"
+          test "$version" = "$(node -p "require('./packages/cli/package.json').version")"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: node scripts/pack-smoke.mjs
+      - name: Publish agentlicense, @agentlicense/core, and @agentlicense/sdk
+        run: pnpm -r publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

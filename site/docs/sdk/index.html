@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#000000">
+  <title>SDK reference · Agent License</title>
+  <meta name="description" content="Call a checkpoint with licensed(fetch), and use the core API to issue, verify, attenuate, and explain an agent credential.">
+  <link rel="canonical" href="https://mlescaille.github.io/agent-town/docs/sdk/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SDK reference">
+  <meta property="og:description" content="Call a checkpoint with licensed(fetch), and use the core API to issue, verify, attenuate, and explain an agent credential.">
+  <meta property="og:url" content="https://mlescaille.github.io/agent-town/docs/sdk/">
+  <meta property="og:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SDK reference">
+  <meta name="twitter:description" content="Call a checkpoint with licensed(fetch), and use the core API to issue, verify, attenuate, and explain an agent credential.">
+  <meta name="twitter:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../../fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"Agent License","description":"Signed agent licenses for agent identity, delegated authority, and on-behalf-of calls, checked outside the agent.","codeRepository":"https://github.com/mlescaille/agent-town","programmingLanguage":"TypeScript","runtimePlatform":"Node.js","license":"https://spdx.org/licenses/MIT.html","version":"0.1.0"},{"@type":"SoftwareApplication","name":"agentlicense","applicationCategory":"DeveloperApplication","operatingSystem":"any","softwareVersion":"0.1.0","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareRequirements":"Node.js >= 22","codeRepository":"https://github.com/mlescaille/agent-town"},{"@type":"TechArticle","headline":"SDK reference","description":"Call a checkpoint with licensed(fetch), and use the core API to issue, verify, attenuate, and explain an agent credential.","url":"https://mlescaille.github.io/agent-town/docs/sdk/","isPartOf":"https://mlescaille.github.io/agent-town/"}]}</script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="nav">
+    <a class="brand" href="../../">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Agent License
+    </a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr">Menu</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a class="btn" href="../../docs/quickstart/">Get started <span aria-hidden="true">→</span></a>
+    </nav>
+  </header>
+  <main class="doc" id="content">
+    <div class="doc-nav-wrap">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a href="../quickstart/">Quickstart</a>
+      <a href="../concepts/">Concepts</a>
+      <a href="../cli/">CLI</a>
+      <a href="../sdk/" aria-current="page">SDK</a>
+      <a href="../checkpoint/">Checkpoint</a>
+      <a href="../faq/">FAQ</a>
+    </nav>
+    </div>
+    <article class="prose">
+<h1>SDK reference</h1>
+<p><code>@agentlicense/<wbr>sdk</code> exports one function, <code>licensed(fetch)</code>. <code>@agentlicense/<wbr>core</code> is the library that issues and checks licenses. Both are ESM, for Node.js 22 or newer.</p>
+<p>They are not on the npm registry yet. From a clone, <code>pnpm install</code> links them. After publish:</p>
+<div class="codeblock"><div class="codeblock-scroll"><pre><code>npm install @agentlicense/sdk</code></pre></div></div>
+<p>That installs <code>@agentlicense/<wbr>core</code> as well.</p>
+<h2>licensed(fetch)</h2>
+<p><code>licensed(baseFetch, options)</code> returns a function with the fetch signature. Each call posts JSON to <code>{checkpoint}/<wbr>v1/<wbr>invoke</code> and sets <code>Agent&#8209;License</code> and <code>Agent&#8209;Justification</code>. The request URL is ignored. The JSON body must include <code>action</code> and <code>resource</code> with <code>type</code> and <code>id</code>.</p>
+<div class="table-wrap"><table><thead><tr><th>Option</th><th>Required</th><th>Role</th></tr></thead><tbody><tr><td><code>license</code></td><td>yes</td><td>Compact issuer-signed license</td></tr><tr><td><code>agentPrivateKey</code></td><td>yes</td><td>Private key of the agent named by the license</td></tr><tr><td><code>checkpoint</code></td><td>yes</td><td>Origin of the checkpoint, such as <code>http:/<wbr>/<wbr>127.0.0.1:43122</code></td></tr><tr><td><code>why</code></td><td>yes</td><td>A string, or a function of <code>{ action, location }</code></td></tr><tr><td><code>userRequest</code></td><td>no</td><td>User-request JWS. The checkpoint checks its hash when present</td></tr></tbody></table></div>
+<p>The justification basis is chosen from the mandate. For <code>user_goal</code> the goal is copied from the license. The justification lives at most 300 seconds; the helper uses 60.</p>
+<h2>Runnable example</h2>
+<p><code>examples/<wbr>sdk&#8209;quickstart/<wbr>main.mjs</code> issues a <code>user_goal</code> license and presents it. Without <code>CHECKPOINT</code>, it uses a stand-in fetch and prints the headers. With <code>CHECKPOINT</code> set to a running <code>agentlicense dev</code>, it calls that checkpoint. Set <code>AGENT_LICENSE_HOME</code> to the same key directory <code>dev</code> is using, or the issuer signature will not match.</p>
+<div class="codeblock"><div class="codeblock-scroll"><pre><code>import { existsSync, mkdtempSync } from &quot;node:fs&quot;;
+import { tmpdir } from &quot;node:os&quot;;
+import { join, resolve } from &quot;node:path&quot;;
+
+import {
+  agentSpiffe,
+  createUserRequest,
+  initKeystore,
+  issueLicense,
+  loadKeystore,
+  userIdOf,
+} from &quot;@agentlicense/core&quot;;
+import { licensed } from &quot;@agentlicense/sdk&quot;;
+
+const invokedFrom = process.env.INIT_CWD ?? process.cwd();
+const home = process.env.AGENT_LICENSE_HOME
+  ? resolve(invokedFrom, process.env.AGENT_LICENSE_HOME)
+  : mkdtempSync(join(tmpdir(), &quot;agent-license-&quot;));
+const keys = existsSync(join(home, &quot;issuer.jwk&quot;)) ? loadKeystore(home) : initKeystore(home);
+const userId = userIdOf(&quot;alice&quot;);
+const agent = agentSpiffe(&quot;planner&quot;);
+const now = Math.floor(Date.now() / 1000);
+
+const userRequest = createUserRequest({
+  userId,
+  userKey: keys.user(userId),
+  agent,
+  mandate: { type: &quot;user_goal&quot;, goal: &quot;Summarize the primary calendar&quot; },
+  authorizationDetails: [
+    {
+      type: &quot;urn:agent-license:tool&quot;,
+      actions: [&quot;calendar.read&quot;],
+      locations: [&quot;calendar:primary&quot;],
+      budget: { max_calls: 2 },
+    },
+  ],
+  ttlSeconds: 600,
+  now,
+});
+
+const { license } = issueLicense({
+  userRequestJws: userRequest,
+  issuerKey: keys.issuer,
+  userKeys: keys.userPublic(),
+  agentKeys: keys.agentPublic(),
+  ttlSeconds: 600,
+  now,
+});
+
+const checkpoint = process.env.CHECKPOINT ?? &quot;http://127.0.0.1:43122&quot;;
+const baseFetch = process.env.CHECKPOINT
+  ? globalThis.fetch
+  : async (input, init) =&gt; {
+      const headers = new Headers(init?.headers);
+      const presented = headers.get(&quot;agent-license&quot;) ?? &quot;&quot;;
+      const justification = headers.get(&quot;agent-justification&quot;) ?? &quot;&quot;;
+      console.log(`POST ${input}`);
+      console.log(`agent-license ${presented.slice(0, 32)}…`);
+      console.log(`agent-justification ${justification ? &quot;present&quot; : &quot;missing&quot;}`);
+      return new Response(JSON.stringify({ decision: &quot;allow&quot;, offline: true }), {
+        status: 200,
+        headers: { &quot;content-type&quot;: &quot;application/json&quot; },
+      });
+    };
+
+const call = licensed(baseFetch, {
+  license,
+  agentPrivateKey: keys.agent(agent),
+  checkpoint,
+  why: &quot;Reading the calendar is how the summary is produced.&quot;,
+  userRequest,
+});
+
+const response = await call(&quot;http://tool.invalid/ignored&quot;, {
+  method: &quot;POST&quot;,
+  body: JSON.stringify({
+    action: &quot;calendar.read&quot;,
+    resource: { type: &quot;calendar&quot;, id: &quot;primary&quot; },
+  }),
+});
+
+console.log(`status ${response.status}`);
+console.log(await response.text());</code></pre></div></div>
+<p>From the repository root, after <code>pnpm install</code>:</p>
+<div class="term" id="term-sdk-1" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-sdk-1" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm --filter @agent-license/sdk-quickstart start</code></pre></div></div>
+<p>Against a local checkpoint that was started with the default key directory:</p>
+<div class="term" id="term-sdk-2" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-sdk-2" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>AGENT_LICENSE_HOME=.agent-license \
+  CHECKPOINT=http://127.0.0.1:43122 \
+  pnpm --filter @agent-license/sdk-quickstart start</code></pre></div></div>
+<h2>Core API</h2>
+<p>Import from <code>@agentlicense/<wbr>core</code>. The calls below are the ones the CLI and the checkpoint use.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>What it does</th></tr></thead><tbody><tr><td><code>initKeystore(home)</code></td><td>Writes issuer, log, <code>user:alice</code>, <code>planner</code>, and <code>researcher</code> keys</td></tr><tr><td><code>loadKeystore(home)</code></td><td>Reads that directory</td></tr><tr><td><code>generateEd25519Keypair()</code></td><td>One Ed25519 key, <code>kid</code> set to the RFC 7638 thumbprint</td></tr><tr><td><code>publicJwk(key)</code></td><td>Public OKP JWK</td></tr><tr><td><code>userIdOf(name)</code> / <code>agentSpiffe(name)</code></td><td><code>user:alice</code> and <code>spiffe:/<wbr>/<wbr>agent&#8209;license.example/<wbr>agent/<wbr>planner</code></td></tr><tr><td><code>createUserRequest(input)</code></td><td>User-signed <code>agent&#8209;request+jwt</code></td></tr><tr><td><code>issueLicense(input)</code></td><td>Issuer-signed license bound to that request</td></tr><tr><td><code>verifyLicense(jws, issuerPublic)</code></td><td>Signature, time window, and claim shape</td></tr><tr><td><code>attenuateLicense(input)</code></td><td>Narrower child license</td></tr><tr><td><code>createJustification(input)</code></td><td>Agent-signed justification</td></tr><tr><td><code>verifyJustification(jws, agentPublic)</code></td><td>Checks that justification</td></tr><tr><td><code>assessPresentation(input)</code></td><td>License, justification, scope, budget, chain, and basis</td></tr><tr><td><code>delegationChain(claims)</code></td><td>User, then agents from the original to the current</td></tr><tr><td><code>expectedBasis(mandateType)</code></td><td><code>user_request</code>, <code>user_goal</code>, or <code>agent</code></td></tr><tr><td><code>parseLicenseClaims</code> / <code>decodeJws</code></td><td>Parse without trusting a signature</td></tr><tr><td><code>MerkleLog</code></td><td>Append-only tree of decision records</td></tr><tr><td><code>verifyReplayedLog(entries, sths, logPublic)</code></td><td>Inclusion and consistency over a saved log</td></tr><tr><td><code>LicenseError</code></td><td><code>error.code</code> is a stable string such as <code>malformed</code> or <code>expired</code></td></tr></tbody></table></div>
+<p><code>issueLicense</code> returns <code>{ license, claims }</code>. <code>authorization_details</code> has exactly one element. Unknown claim names are rejected.</p>
+<p>Constants worth knowing: <code>LICENSE_TYP</code>, <code>REQUEST_TYP</code>, <code>JUSTIFICATION_TYP</code>, <code>STH_TYP</code>, <code>AGENT_INITIATED_CEILING</code>, <code>MAX_CHAIN_DEPTH</code> (8), and <code>MAX_JUSTIFICATION_TTL_SECONDS</code> (300).</p>
+<p>The demo at <code>examples/<wbr>demo</code> runs the same API against the services: three mandates, an over-scope denial, attenuation, and a log replay. <code>pnpm demo</code> prints <code>demo: ok</code> when that walkthrough passes.</p>
+    </article>
+  </main>
+  <footer class="foot">
+    <nav aria-label="Footer">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+    </nav>
+  </footer>
+  <script src="../../nav.js"></script>
+</body>
+</html>

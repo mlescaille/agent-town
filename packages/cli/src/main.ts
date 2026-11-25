@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -24,27 +23,89 @@ import {
   verifyReplayedLog,
   type AuthorizationDetail,
   type Mandate,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 import { startIssuer } from "@agent-license/issuer";
 import { startLog, verifyRemoteLog } from "@agent-license/log";
 import { evaluateAccess, startPdp } from "@agent-license/pdp";
 
 const HELP = `agentlicense — verifiable mandates for AI agents
 
-  keys init [--home dir]
-  issue --user <name> --agent <name> --mandate <direct_request|user_goal|agent_initiated>
-        [--goal text] [--action name --location type:id]
-        [--actions a,b] [--locations t:id,t:id] [--budget n] [--ttl seconds]
-  inspect <license> [--home dir]
-  attenuate --parent <license> --agent <name> [--actions a,b] [--locations t:id]
-        [--budget n] [--ttl seconds]
-  check --license <license> --action <name> --location <type:id> --why <text>
-        [--justification <jws>] [--user-request <jws>] [--basis <basis>]
-  log verify (--url http://127.0.0.1:43124 | --home dir)
-  dev [--home dir]
+Signed licenses for agent identity and delegated authority. An issuer signs
+a license that names the agent, who it acts for, and what it may do. A
+checkpoint outside the agent checks that license on every call.
+
+Usage:
+  agentlicense --help
+  agentlicense keys init [--home <dir>]
+  agentlicense issue --user <name> --agent <name> --mandate <mandate> [flags]
+  agentlicense inspect <license> [--home <dir>]
+  agentlicense attenuate --parent <license> --agent <name> [flags]
+  agentlicense check --license <license> --action <name> --location <type:id> [flags]
+  agentlicense log verify [--url <url>] [--home <dir>]
+  agentlicense dev [--home <dir>]
 
 The default key directory is ./.agent-license.
-issue and attenuate print a compact JWS on stdout.
+issue and attenuate print a compact JWS on stdout. Notes go to stderr.
+
+keys init
+  Write Ed25519 keys for the issuer, the log, user:alice, planner, and researcher.
+  --home <dir>           Key directory. Default: .agent-license
+
+issue
+  Sign a license. Requires --user, --agent, and --mandate.
+  The named user's key signs the request. The issuer key signs the license.
+  direct_request needs exactly one action and one location.
+  user_goal needs --goal. agent_initiated must stay inside the read-only ceiling:
+  clock.read, catalog.list, memory.read and clock:local, catalog:public, memory:self,
+  with budget at most 5.
+  --home <dir>           Key directory. Default: .agent-license
+  --user <name>          Required. User name, or user:<name>.
+  --agent <name>         Required. Agent slug, or a spiffe:// id.
+  --mandate <mandate>    Required. direct_request, user_goal, or agent_initiated.
+  --goal <text>          Required for user_goal. The goal the user set.
+  --action <name>        One action, such as calendar.read.
+  --location <type:id>   One location, such as calendar:primary.
+  --actions <list>       Comma-separated actions.
+  --locations <list>     Comma-separated locations.
+  --budget <n>           max_calls for this license.
+  --ttl <seconds>        Lifetime in seconds. Default: 3600.
+
+inspect
+  Print the claims and the delegation chain. Checks the issuer signature when the key directory has an issuer key.
+  <license>              Positional compact JWS.
+  --home <dir>           Key directory. Default: .agent-license
+
+attenuate
+  Sign a narrower license for a sub-agent. Scope, budget, and expiry can shrink. They cannot grow, and the mandate type cannot change.
+  --home <dir>           Key directory. Default: .agent-license
+  --parent <license>     Required. Parent compact JWS.
+  --agent <name>         Required. Child agent slug, or a spiffe:// id.
+  --actions <list>       Comma-separated actions. Default: the parent's actions.
+  --locations <list>     Comma-separated locations. Default: the parent's locations.
+  --budget <n>           max_calls. Cannot exceed the parent.
+  --ttl <seconds>        Lifetime. Must expire no later than the parent.
+
+check
+  Dry-run one call against the Cedar policy. Does not start services and does not append to the log.
+  --home <dir>              Key directory. Default: .agent-license
+  --license <license>       Required. Compact JWS.
+  --action <name>           Required.
+  --location <type:id>      Required.
+  --why <text>              Why this call is being made. Used when --justification is omitted.
+  --justification <jws>     Pre-signed justification. Default: sign one with the agent key.
+  --user-request <jws>      Originating user-request JWS. Checked when present.
+  --basis <basis>           user_request, user_goal, or agent. Default: the basis the mandate requires.
+
+log verify
+  Replay the Merkle decision log and check inclusion and consistency.
+  --home <dir>     Key directory. Default: .agent-license. Supplies the log public key, and the local log when --url is omitted.
+  --url <url>      Log base URL, for example http://127.0.0.1:43124.
+
+dev
+  Start the issuer, checkpoint, Cedar PDP, Merkle log, and demo tool on 127.0.0.1.
+  Ports: issuer 43121, checkpoint 43122, pdp 43123, log 43124, upstream 43125.
+  Creates the key directory when it is missing. Runs until SIGINT or SIGTERM.
+  --home <dir>     Key directory. Default: .agent-license
 `;
 
 async function main(): Promise<void> {

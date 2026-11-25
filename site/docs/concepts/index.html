@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#000000">
+  <title>Concepts · Agent License</title>
+  <meta name="description" content="Agent identity, the three mandates, delegation, checkpoints, Cedar policy, and the Merkle decision log.">
+  <link rel="canonical" href="https://mlescaille.github.io/agent-town/docs/concepts/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Concepts">
+  <meta property="og:description" content="Agent identity, the three mandates, delegation, checkpoints, Cedar policy, and the Merkle decision log.">
+  <meta property="og:url" content="https://mlescaille.github.io/agent-town/docs/concepts/">
+  <meta property="og:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Concepts">
+  <meta name="twitter:description" content="Agent identity, the three mandates, delegation, checkpoints, Cedar policy, and the Merkle decision log.">
+  <meta name="twitter:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../../fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"Agent License","description":"Signed agent licenses for agent identity, delegated authority, and on-behalf-of calls, checked outside the agent.","codeRepository":"https://github.com/mlescaille/agent-town","programmingLanguage":"TypeScript","runtimePlatform":"Node.js","license":"https://spdx.org/licenses/MIT.html","version":"0.1.0"},{"@type":"SoftwareApplication","name":"agentlicense","applicationCategory":"DeveloperApplication","operatingSystem":"any","softwareVersion":"0.1.0","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareRequirements":"Node.js >= 22","codeRepository":"https://github.com/mlescaille/agent-town"},{"@type":"TechArticle","headline":"Concepts","description":"Agent identity, the three mandates, delegation, checkpoints, Cedar policy, and the Merkle decision log.","url":"https://mlescaille.github.io/agent-town/docs/concepts/","isPartOf":"https://mlescaille.github.io/agent-town/"}]}</script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="nav">
+    <a class="brand" href="../../">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Agent License
+    </a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr">Menu</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a class="btn" href="../../docs/quickstart/">Get started <span aria-hidden="true">→</span></a>
+    </nav>
+  </header>
+  <main class="doc" id="content">
+    <div class="doc-nav-wrap">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a href="../quickstart/">Quickstart</a>
+      <a href="../concepts/" aria-current="page">Concepts</a>
+      <a href="../cli/">CLI</a>
+      <a href="../sdk/">SDK</a>
+      <a href="../checkpoint/">Checkpoint</a>
+      <a href="../faq/">FAQ</a>
+    </nav>
+    </div>
+    <article class="prose">
+<h1>Concepts</h1>
+<p>An agent does not mint its own authority. A separate issuer signs a license. The agent presents that license, plus a signed reason for this call, to a checkpoint that is not the agent process. The checkpoint decides, records the decision, and only then forwards the call.</p>
+<p>That is the answer to &quot;which agent is calling my API&quot;: the caller presents an agent credential, the credential names a user it acts for, and a component outside the agent checks both.</p>
+<h2>License</h2>
+<p>A license is a compact JWS (<code>typ</code> <code>agent&#8209;license+jwt</code>) signed by the issuer with Ed25519. It names:</p>
+<ul><li><code>sub</code>, the user, such as <code>user:alice</code></li><li><code>agent</code>, a SPIFFE-style id such as <code>spiffe:/<wbr>/<wbr>agent&#8209;license.example/<wbr>agent/<wbr>planner</code></li><li>one mandate</li><li>one <code>authorization_details</code> entry (<code>urn:agent&#8209;license:tool</code>) with actions, locations, and an optional call budget</li><li><code>txn</code> and <code>req_hash</code>, binding the license to the user-signed request</li><li><code>act</code>, the delegation chain</li></ul>
+<p>The issuer id and the checkpoint audience in this prototype are logical names, not hosts you can dial: <code>https:/<wbr>/<wbr>issuer.agent&#8209;license.example</code> and <code>https:/<wbr>/<wbr>checkpoint.agent&#8209;license.example</code>.</p>
+<p>Agents never sign licenses. They sign a short-lived justification (<code>agent&#8209;justification+jwt</code>) for one action and one location.</p>
+<h2>Mandates</h2>
+<p>A license carries exactly one mandate.</p>
+<div class="table-wrap"><table><thead><tr><th>Mandate</th><th>Meaning</th></tr></thead><tbody><tr><td><code>direct_request</code></td><td>The user asked for this exact action and location. The scope is that one pair.</td></tr><tr><td><code>user_goal</code></td><td>The user set a goal. The agent chooses calls inside the granted scope. The justification restates that goal.</td></tr><tr><td><code>agent_initiated</code></td><td>The agent acts on its own, inside a fixed ceiling: <code>clock.read</code>, <code>catalog.list</code>, and <code>memory.read</code> on <code>clock:local</code>, <code>catalog:public</code>, and <code>memory:self</code>, with at most 5 calls.</td></tr></tbody></table></div>
+<p>The justification basis has to match the mandate: <code>user_request</code>, <code>user_goal</code>, or <code>agent</code>. A read verb is <code>read</code>, <code>list</code>, or <code>get</code>. Every other verb is a write. <code>agent_initiated</code> cannot write.</p>
+<h2>Delegation chain</h2>
+<p><code>act</code> is the actor claim from RFC 8693. The outermost actor is the agent presenting the license. A nested <code>act</code> is the previous agent. The chain is at most eight agents, and no agent id repeats.</p>
+<p>On current <code>main</code>, <code>agentlicense inspect</code> prints that chain as identifiers. A root license is the user, then the agent:</p>
+<div class="codeblock"><div class="codeblock-scroll"><pre><code>chain
+  user:alice
+  spiffe://agent-license.example/agent/planner</code></pre></div></div>
+<p>An attenuated license adds the child at the end and sets <code>parent_jti</code>. Attenuation can narrow actions, locations, budget, and expiry. It cannot widen them, and it cannot change the mandate type.</p>
+<h3>Canonical sentence</h3>
+<p>A single English sentence for the chain is not on <code>main</code>. It is only in open <a href="https://github.com/mlescaille/agent-town/pull/1">pull request #1</a>. That pull request would have <code>inspect</code> print a sentence of this shape:</p>
+<blockquote><p>I am Researcher (subagent-123), acting on behalf of Planner (planner-1), on behalf of user:alice, requesting documents.search.</p></blockquote>
+<p>Until that pull request merges, the checkpoint does not require the sentence, and <code>attenuate</code> does not take <code>&#8209;&#8209;name</code>, <code>&#8209;&#8209;instance</code>, or <code>&#8209;&#8209;task</code>. The on-behalf-of relationship that exists today is the nested <code>act</code> claim.</p>
+<h2>Checkpoint</h2>
+<p>The checkpoint is a policy enforcement point outside the agent. <code>licensed(fetch)</code> posts the tool call to the checkpoint and sets two headers:</p>
+<div class="table-wrap"><table><thead><tr><th>Header</th><th>Value</th></tr></thead><tbody><tr><td><code>Agent&#8209;License</code></td><td>The issuer-signed license</td></tr><tr><td><code>Agent&#8209;Justification</code></td><td>A new agent-signed justification for this call</td></tr></tbody></table></div>
+<p>The JSON body carries <code>action</code>, <code>resource</code> (<code>type</code> and <code>id</code>), optional <code>input</code>, and an optional <code>user_request</code> JWS. The URL the agent passed to <code>fetch</code> is not contacted. The checkpoint owns the upstream.</p>
+<p><code>agentlicense dev</code> binds the checkpoint to <code>127.0.0.1:43122</code>. <code>POST /<wbr>v1/<wbr>invoke</code> is the only call path. <code>GET /<wbr>health</code> reports that the process is up.</p>
+<h2>Policy</h2>
+<p>The checkpoint sends an <a href="https://openid.net/specs/authorization-api-1_0.html">OpenID AuthZEN 1.0</a> evaluation to a Cedar policy decision point. The policies in <code>policies/<wbr>mandates.cedar</code> are:</p>
+<ul><li><code>permit&#8209;bound&#8209;call</code>, when the justification, scope, request binding, budget, chain, mandate, and basis all check out</li><li><code>forbid&#8209;agent&#8209;initiated&#8209;writes</code></li><li><code>forbid&#8209;direct&#8209;request&#8209;inexact</code>, when a direct request is not exactly the named action and location</li></ul>
+<p>The decision point in this prototype trusts the booleans the checkpoint computed (<code>in_scope</code>, <code>basis_ok</code>, and the rest) and is meant to stay on localhost. Its discovery document is real: <code>GET /<wbr>.well&#8209;known/<wbr>authzen&#8209;configuration</code> on the PDP process.</p>
+<h2>Log</h2>
+<p>Allowed and denied calls are appended to a Merkle log. The log signs each tree head (<code>agent&#8209;log&#8209;sth+jwt</code>). <code>agentlicense log verify</code> replays the entries and checks inclusion and consistency. A flipped leaf fails verification.</p>
+<p>The log key can rewrite history if an observer did not keep an older signed tree head. <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">ROADMAP.md</a> records that limit.</p>
+<h2>What is not a registered discovery document</h2>
+<p><code>GET /<wbr>.well&#8209;known/<wbr>authzen&#8209;configuration</code> on the running PDP is the AuthZEN discovery document this code serves.</p>
+<p><code>/<wbr>.well&#8209;known/<wbr>agent&#8209;license.json</code> on this website is a proposed descriptor for people and agents. It is not registered with IANA. The checkpoint does not fetch it. The fields in it match this prototype: header names, token <code>typ</code> values, mandate names, and <code>POST /<wbr>v1/<wbr>invoke</code>. Treat the file as documentation in JSON, not as a protocol the services implement.</p>
+    </article>
+  </main>
+  <footer class="foot">
+    <nav aria-label="Footer">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+    </nav>
+  </footer>
+  <script src="../../nav.js"></script>
+</body>
+</html>

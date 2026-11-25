@@ -1,8 +1,29 @@
 {
-  "name": "@agent-license/cli",
+  "name": "agentlicense",
   "version": "0.1.0",
-  "description": "agentlicense command line tool.",
+  "description": "CLI to issue, inspect, and check signed agent licenses.",
   "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "agent-identity",
+    "agent-authorization",
+    "agent-delegation",
+    "ai-agent",
+    "cli",
+    "mcp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlescaille/agent-town.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/mlescaille/agent-town/blob/main/docs/cli.md",
+  "bugs": {
+    "url": "https://github.com/mlescaille/agent-town/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "bin": {
     "agentlicense": "./dist/main.js"
   },
@@ -14,15 +35,29 @@
       "import": "./dist/main.js"
     }
   },
+  "files": [
+    "dist",
+    "policies",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json && chmod +x dist/main.js"
+    "build": "tsc -p tsconfig.json && node ../../scripts/bundle-cli.mjs",
+    "prepack": "node ../../scripts/cli-pack.mjs strip",
+    "postpack": "node ../../scripts/cli-pack.mjs restore",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
+    "@cedar-policy/cedar-wasm": "4.15.0"
+  },
+  "devDependencies": {
     "@agent-license/checkpoint": "workspace:*",
-    "@agent-license/core": "workspace:*",
+    "@agentlicense/core": "workspace:*",
     "@agent-license/issuer": "workspace:*",
     "@agent-license/log": "workspace:*",
-    "@agent-license/pdp": "workspace:*",
-    "@agent-license/sdk": "workspace:*"
+    "@agent-license/pdp": "workspace:*"
   }
 }

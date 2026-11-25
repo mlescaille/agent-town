@@ -1,8 +1,29 @@
 {
-  "name": "@agent-license/sdk",
+  "name": "@agentlicense/sdk",
   "version": "0.1.0",
-  "description": "licensed(fetch) attaches an agent license and a signed justification.",
+  "description": "licensed(fetch) presents an agent license and a signed justification at a checkpoint.",
   "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "agent-identity",
+    "agent-authorization",
+    "on-behalf-of",
+    "ai-agent",
+    "checkpoint",
+    "fetch"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlescaille/agent-town.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/mlescaille/agent-town/blob/main/docs/sdk.md",
+  "bugs": {
+    "url": "https://github.com/mlescaille/agent-town/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -11,10 +32,19 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@agent-license/core": "workspace:*"
+    "@agentlicense/core": "workspace:*"
   }
 }

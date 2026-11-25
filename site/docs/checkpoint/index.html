@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#000000">
+  <title>Running a checkpoint · Agent License</title>
+  <meta name="description" content="Start the local issuer, checkpoint, Cedar PDP, and Merkle log, then verify a decision.">
+  <link rel="canonical" href="https://mlescaille.github.io/agent-town/docs/checkpoint/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Running a checkpoint">
+  <meta property="og:description" content="Start the local issuer, checkpoint, Cedar PDP, and Merkle log, then verify a decision.">
+  <meta property="og:url" content="https://mlescaille.github.io/agent-town/docs/checkpoint/">
+  <meta property="og:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Running a checkpoint">
+  <meta name="twitter:description" content="Start the local issuer, checkpoint, Cedar PDP, and Merkle log, then verify a decision.">
+  <meta name="twitter:image" content="https://mlescaille.github.io/agent-town/og.png">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../../fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"Agent License","description":"Signed agent licenses for agent identity, delegated authority, and on-behalf-of calls, checked outside the agent.","codeRepository":"https://github.com/mlescaille/agent-town","programmingLanguage":"TypeScript","runtimePlatform":"Node.js","license":"https://spdx.org/licenses/MIT.html","version":"0.1.0"},{"@type":"SoftwareApplication","name":"agentlicense","applicationCategory":"DeveloperApplication","operatingSystem":"any","softwareVersion":"0.1.0","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareRequirements":"Node.js >= 22","codeRepository":"https://github.com/mlescaille/agent-town"},{"@type":"TechArticle","headline":"Running a checkpoint","description":"Start the local issuer, checkpoint, Cedar PDP, and Merkle log, then verify a decision.","url":"https://mlescaille.github.io/agent-town/docs/checkpoint/","isPartOf":"https://mlescaille.github.io/agent-town/"}]}</script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="nav">
+    <a class="brand" href="../../">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.2 27.5 9.6v12.8L16 28.8 4.5 22.4V9.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10.2 16.2 14.2 20.2 22 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Agent License
+    </a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links">
+      <span class="sr">Menu</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a class="btn" href="../../docs/quickstart/">Get started <span aria-hidden="true">→</span></a>
+    </nav>
+  </header>
+  <main class="doc" id="content">
+    <div class="doc-nav-wrap">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a href="../quickstart/">Quickstart</a>
+      <a href="../concepts/">Concepts</a>
+      <a href="../cli/">CLI</a>
+      <a href="../sdk/">SDK</a>
+      <a href="../checkpoint/" aria-current="page">Checkpoint</a>
+      <a href="../faq/">FAQ</a>
+    </nav>
+    </div>
+    <article class="prose">
+<h1>Running a checkpoint</h1>
+<p><code>agentlicense dev</code> starts five processes on <code>127.0.0.1</code>. They share the key directory. This is the prototype's whole deployment: one machine, no public listener.</p>
+<div class="term" id="term-checkpoint-1" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-checkpoint-1" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense dev</code></pre></div></div>
+<div class="table-wrap"><table><thead><tr><th>Port</th><th>Process</th><th>Role</th></tr></thead><tbody><tr><td>43121</td><td>Issuer</td><td>Signs licenses and attenuated licenses</td></tr><tr><td>43122</td><td>Checkpoint</td><td>Checks the caller, then forwards the tool call</td></tr><tr><td>43123</td><td>Cedar PDP</td><td>AuthZEN evaluation</td></tr><tr><td>43124</td><td>Log</td><td>Merkle decisions and proofs</td></tr><tr><td>43125</td><td>Demo tool</td><td>Upstream the checkpoint calls when the decision is allow</td></tr></tbody></table></div>
+<p>If <code>.agent&#8209;license/<wbr></code> is missing, <code>dev</code> creates it. The process runs until SIGINT or SIGTERM.</p>
+<p>Health checks, from another shell:</p>
+<div class="term" id="term-checkpoint-2" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-checkpoint-2" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>curl -s http://127.0.0.1:43121/health
+curl -s http://127.0.0.1:43122/health
+curl -s http://127.0.0.1:43123/health
+curl -s http://127.0.0.1:43123/.well-known/authzen-configuration
+curl -s http://127.0.0.1:43124/health
+curl -s http://127.0.0.1:43125/health</code></pre></div></div>
+<p>The AuthZEN document on port 43123 is served by the PDP. It points at <code>/<wbr>access/<wbr>v1/<wbr>evaluation</code> on that same process.</p>
+<h2>Present a license</h2>
+<p>With <code>dev</code> running, the SDK quickstart can use the same keys:</p>
+<div class="term" id="term-checkpoint-3" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-checkpoint-3" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>AGENT_LICENSE_HOME=.agent-license \
+  CHECKPOINT=http://127.0.0.1:43122 \
+  pnpm --filter @agent-license/sdk-quickstart start</code></pre></div></div>
+<p>The agent posts to <code>http:/<wbr>/<wbr>127.0.0.1:43122/<wbr>v1/<wbr>invoke</code> with <code>Agent&#8209;License</code> and <code>Agent&#8209;Justification</code>. An allow is HTTP 200 and includes the upstream result. A deny is HTTP 403 and still has a <code>log_index</code>, because the denial is recorded before the tool is contacted.</p>
+<p>Issuer routes, if you sign without the CLI:</p>
+<div class="table-wrap"><table><thead><tr><th>Method and path</th><th>Body</th></tr></thead><tbody><tr><td><code>POST /<wbr>v1/<wbr>licenses</code></td><td><code>{ &quot;user_request&quot;: &quot;&lt;jws&gt;&quot;, &quot;ttl_seconds&quot;: 3600 }</code></td></tr><tr><td><code>POST /<wbr>v1/<wbr>licenses/<wbr>attenuate</code></td><td><code>{ &quot;parent&quot;: &quot;&lt;jws&gt;&quot;, &quot;agent&quot;: &quot;&lt;spiffe id&gt;&quot;, &quot;authorization_details&quot;: [], &quot;exp&quot;: 1700000000 }</code></td></tr><tr><td><code>GET /<wbr>jwks</code></td><td>Issuer, user, and agent public keys</td></tr></tbody></table></div>
+<h2>Verify the log</h2>
+<p>After at least one invoke:</p>
+<div class="term" id="term-checkpoint-4" role="region" aria-label="Commands"><button type="button" class="term-copy" data-copy="term-checkpoint-4" aria-label="Copy commands"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="copy-label">Copy</span></button><div class="term-scroll"><pre><code>pnpm exec agentlicense log verify --url http://127.0.0.1:43124</code></pre></div></div>
+<p>That downloads the entries and signed tree heads, replays them, and checks an inclusion proof and a consistency proof. <code>ok true</code> means the replay matched. The log public key comes from <code>&#8209;&#8209;home</code> (default <code>.agent&#8209;license</code>).</p>
+<p><code>log verify</code> without <code>&#8209;&#8209;url</code> reads <code>.agent&#8209;license/<wbr>log/<wbr>entries.ndjson</code> and <code>sths.ndjson</code> instead of the network.</p>
+<h2>What this process is not</h2>
+<p>The checkpoint does not authenticate itself to the policy decision point. Budgets live in the checkpoint process and reset when it exits. A checkpoint cannot re-prove that an ancestor scope was narrowed unless it is shown the parent license. Do not put these ports on a network.</p>
+    </article>
+  </main>
+  <footer class="foot">
+    <nav aria-label="Footer">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md">Spec</a>
+      <a href="https://github.com/mlescaille/agent-town">GitHub</a>
+      <a href="https://github.com/mlescaille/agent-town/blob/main/ROADMAP.md">Roadmap</a>
+    </nav>
+  </footer>
+  <script src="../../nav.js"></script>
+</body>
+</html>

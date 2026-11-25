@@ -5,7 +5,7 @@ import {
   readJson,
   requestUrl,
   sendJson,
-} from "@agent-license/core";
+} from "@agentlicense/core";
 
 import { evaluateAccess, evaluateBatch } from "./evaluate.js";
 import { loadPolicies } from "./policy.js";

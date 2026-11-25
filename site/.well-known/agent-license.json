@@ -1,0 +1,27 @@
+{
+  "status": "proposed",
+  "iana_registered": false,
+  "name": "Agent License",
+  "version": "0.1.0",
+  "profile": "https://github.com/mlescaille/agent-town/blob/main/spec/LICENSE-FORMAT.md",
+  "repository": "https://github.com/mlescaille/agent-town",
+  "docs": "/llms.txt",
+  "mandate_types": ["direct_request", "user_goal", "agent_initiated"],
+  "tokens": {
+    "alg": "EdDSA",
+    "license_typ": "agent-license+jwt",
+    "request_typ": "agent-request+jwt",
+    "justification_typ": "agent-justification+jwt",
+    "sth_typ": "agent-log-sth+jwt"
+  },
+  "presentation": {
+    "license_header": "Agent-License",
+    "justification_header": "Agent-Justification",
+    "invoke_method": "POST",
+    "invoke_path": "/v1/invoke"
+  },
+  "implemented_by_services": {
+    "website_descriptor": "This file. Checkpoints do not fetch it.",
+    "pdp_authzen_discovery": "GET /.well-known/authzen-configuration on the policy decision point. That route is real and follows OpenID AuthZEN 1.0."
+  }
+}

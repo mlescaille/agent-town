@@ -1,8 +1,29 @@
 {
-  "name": "@agent-license/core",
+  "name": "@agentlicense/core",
   "version": "0.1.0",
-  "description": "License types, Ed25519 JWS, attenuation, justification, and an RFC 9162 Merkle log.",
+  "description": "Agent identity types, Ed25519 licenses, delegation, and a Merkle decision log.",
   "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "agent-identity",
+    "agent-authorization",
+    "agent-credential",
+    "delegated-authority",
+    "ed25519",
+    "merkle"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlescaille/agent-town.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/mlescaille/agent-town/blob/main/docs/sdk.md",
+  "bugs": {
+    "url": "https://github.com/mlescaille/agent-town/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -11,8 +32,16 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "pnpm run build"
   }
 }

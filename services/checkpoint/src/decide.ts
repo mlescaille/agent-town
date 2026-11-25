@@ -1,4 +1,4 @@
-import type { Assessment } from "@agent-license/core";
+import type { Assessment } from "@agentlicense/core";
 
 export interface PolicyAnswer {
   decision: boolean;

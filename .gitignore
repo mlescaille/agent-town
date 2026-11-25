@@ -6,3 +6,5 @@ dist/
 coverage/
 .DS_Store
 *.log
+packages/cli/policies/
+*.pack-backup
