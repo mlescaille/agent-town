@@ -92,25 +92,27 @@
               <svg class="sig" viewBox="0 0 150 48" aria-hidden="true">
                 <path d="M3 30c6-16 12-18 16-4 2 8 1 12-5 10-7-2-5-14 6-18 14-6 16 6 20 14 2 5 8 6 12 0 6-10 8 0 14 8 5 6 12 2 20-8 5-6 16 4 24 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              <p class="issued">Issued by <span>mlescaille/agent-town</span></p>
             </div>
             <div class="seal" id="seal" data-state="pending">
-              <svg viewBox="0 0 220 220" aria-hidden="true">
-                <circle cx="110" cy="110" r="104" fill="none" stroke="currentColor" stroke-width="2.4"/>
-                <circle cx="110" cy="110" r="70" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                <path id="seal-top" d="M30,73 A88,88 0 0 1 190,73" fill="none"/>
-                <path id="seal-bot" d="M32,142 A86,86 0 0 0 188,142" fill="none"/>
-                <text fill="currentColor" font-family="Inter, sans-serif" font-weight="700" font-size="18" letter-spacing="1.8">
-                  <textPath href="#seal-top" startOffset="50%" text-anchor="middle">VERIFIED ·</textPath>
+              <svg viewBox="0 0 240 240" aria-hidden="true">
+                <circle cx="120" cy="120" r="112" fill="none" stroke="currentColor" stroke-width="2.6"/>
+                <circle cx="120" cy="120" r="64" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                <path id="seal-top" d="M35,80 A94,94 0 0 1 205,80" fill="none"/>
+                <path id="seal-bot" d="M35,160 A94,94 0 0 0 205,160" fill="none"/>
+                <text fill="currentColor" font-family="Inter, sans-serif" font-weight="700" font-size="16" letter-spacing="2.2">
+                  <textPath href="#seal-top" startOffset="50%" text-anchor="middle">VERIFIED</textPath>
                 </text>
-                <text fill="currentColor" font-family="Inter, sans-serif" font-weight="700" font-size="14.5" letter-spacing="1.35">
+                <text fill="currentColor" font-family="Inter, sans-serif" font-weight="700" font-size="16" letter-spacing="2.2">
                   <textPath href="#seal-bot" startOffset="50%" text-anchor="middle">OUTSIDE THE AGENT</textPath>
                 </text>
-                <path d="M80 116 L98 134 L146 86" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="32" cy="120" r="3.2" fill="currentColor"/>
+                <circle cx="208" cy="120" r="3.2" fill="currentColor"/>
+                <path d="M92 126 L112 146 L158 96" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <span class="sr" id="seal-status">Checking the sample signature.</span>
             </div>
           </footer>
+          <p class="issued">Issued by <span>mlescaille/agent-town</span></p>
         </article>
       </div>
     </section>
@@ -144,25 +146,54 @@
     <section class="section wrap" id="check">
       <h2>How a check works</h2>
       <ol class="flow">
-        <li>License <svg viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6H62M54 1.5 66 6 54 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
-        <li>Checkpoint <svg viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6H62M54 1.5 66 6 54 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
-        <li>Policy <svg viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6H62M54 1.5 66 6 54 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
-        <li>Log</li>
+        <li>
+          <div class="step-line"><span>License</span><svg class="arrow-h" viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6H62M54 1.5 66 6 54 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <svg class="arrow-v" viewBox="0 0 12 28" aria-hidden="true"><path d="M6 2V18M1.5 14 6 24 10.5 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+        <li>
+          <div class="step-line"><span>Checkpoint</span><svg class="arrow-h" viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6H62M54 1.5 66 6 54 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p class="outcome"><span class="chip chip-allow">ALLOW</span> in scope</p>
+          <svg class="arrow-v" viewBox="0 0 12 28" aria-hidden="true"><path d="M6 2V18M1.5 14 6 24 10.5 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+        <li>
+          <div class="step-line"><span>Policy</span><svg class="arrow-h" viewBox="0 0 72 12" aria-hidden="true"><path d="M0 6H62M54 1.5 66 6 54 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p class="outcome"><span class="chip chip-deny">DENY task_widened</span> sub-agent asked for more than its parent</p>
+          <svg class="arrow-v" viewBox="0 0 12 28" aria-hidden="true"><path d="M6 2V18M1.5 14 6 24 10.5 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+        <li>
+          <div class="step-line"><span>Log</span></div>
+        </li>
       </ol>
-      <div class="chips">
-        <span class="chip chip-allow">ALLOW</span>
-        <span class="chip chip-deny">DENY task_widened</span>
-      </div>
     </section>
 
     <section class="section wrap" id="quickstart">
       <h2>Quickstart</h2>
-      <div class="term" role="region" aria-label="Commands that work in this repository">
-        <p><span class="prompt">&gt;_</span> git clone https://github.com/mlescaille/agent-town.git</p>
-        <p><span class="prompt">&gt;_</span> cd agent-town &amp;&amp; pnpm i &amp;&amp; pnpm build</p>
-        <p><span class="prompt">&gt;_</span> pnpm exec agentlicense keys init</p>
-        <p><span class="prompt">&gt;_</span> pnpm exec agentlicense issue --user alice --agent planner --mandate user_goal --goal "Summarize the primary calendar" --actions calendar.read,calendar.create --locations calendar:primary --budget 10 --ttl 3600 &gt; license.jwt</p>
-        <p><span class="prompt">&gt;_</span> pnpm exec agentlicense check --license "$(cat license.jwt)" --action calendar.read --location calendar:primary --why "Reading today's events is how the summary gets its facts."</p>
+      <div class="term-bar">
+        <button type="button" class="copy" data-copy="quickstart-script" aria-label="Copy quickstart commands">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </button>
+      </div>
+      <div class="term" id="quickstart-script" role="region" aria-label="Commands that work in this repository">
+        <pre><code>git clone https://github.com/mlescaille/agent-town.git</code></pre>
+        <pre><code>cd agent-town &amp;&amp; pnpm i &amp;&amp; pnpm build</code></pre>
+        <pre><code>pnpm exec agentlicense keys init</code></pre>
+        <pre><code>pnpm exec agentlicense issue \
+  --user alice \
+  --agent planner \
+  --mandate user_goal \
+  --goal "Summarize the primary calendar" \
+  --actions calendar.read,calendar.create \
+  --locations calendar:primary \
+  --budget 10 \
+  --ttl 3600 &gt; license.jwt</code></pre>
+        <pre><code>pnpm exec agentlicense check \
+  --license "$(cat license.jwt)" \
+  --action calendar.read \
+  --location calendar:primary \
+  --why "Reading today's events is how the summary gets its facts."</code></pre>
       </div>
     </section>
   </main>

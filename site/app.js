@@ -63,7 +63,12 @@
   document.querySelectorAll("[data-copy]").forEach((button) => {
     button.addEventListener("click", async () => {
       const source = document.getElementById(button.getAttribute("data-copy"));
-      const text = (source.dataset.full || source.textContent).trim();
+      const blocks = source.querySelectorAll("code");
+      const text = source.dataset.full
+        ? source.dataset.full.trim()
+        : blocks.length
+          ? [...blocks].map((block) => block.textContent.replace(/\s+$/u, "")).join("\n\n")
+          : source.textContent.trim();
       const original = button.getAttribute("aria-label");
       try {
         await navigator.clipboard.writeText(text);
