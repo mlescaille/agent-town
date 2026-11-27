@@ -10,12 +10,12 @@ The prototype's issuer, checkpoint, policy decision point, and log still bind to
 | --- | --- |
 | Issuer-signed JWS, `typ` `agent-license+jwt` | JWT access token, `typ` `at+jwt` ([RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) §2.1) |
 | `POST /v1/licenses/attenuate` | Down-scoped [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token exchange |
-| Per-call justification JWS, 300 seconds | [DPoP](https://www.rfc-editor.org/rfc/rfc9449) proof, same 300-second window, plus the `why` text in the body |
+| Per-call justification JWS, 300 seconds | [DPoP](https://www.rfc-editor.org/rfc/rfc9449) when the client sends a proof; [Bearer](https://www.rfc-editor.org/rfc/rfc6750) when it does not. `why` stays in the body. |
 | Agent keys in `.agent-license/agents/` | SPIRE SVIDs |
 | No revocation | [RFC 7662](https://www.rfc-editor.org/rfc/rfc7662) introspection, tokens capped at 900 seconds |
 | Checkpoint `POST /v1/invoke` only | Same checks, plus an MCP resource server ([MCP authorization, 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)) |
 
-Kept: the mandate object, `policies/mandates.cedar`, the AuthZEN PDP, and the Merkle log. There is no dashboard in this repository; `site/` is the documentation site.
+Kept: the mandate object, `policies/mandates.cedar`, the AuthZEN PDP, and the Merkle log. New work, after a mockup is approved: a "My agents" dashboard. `site/` stays the documentation site.
 
 ## What 0.1.0 does
 
@@ -82,9 +82,11 @@ An agent access token is issued by token exchange ([RFC 8693](https://www.rfc-ed
 | `resource` | The checkpoint's MCP resource URI ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) §2). One value. |
 | `authorization_details` | A one-element JSON array ([RFC 9396](https://www.rfc-editor.org/rfc/rfc9396) §6) |
 
-The token request also carries a DPoP proof ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §5). The response uses `token_type` `DPoP` (§7.1) and returns the granted `authorization_details` ([RFC 9396](https://www.rfc-editor.org/rfc/rfc9396) §7).
+When the client sends a DPoP proof on this request ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §5), the response uses `token_type` `DPoP` (§7.1) and includes `cnf.jkt`. When the client does not send a proof, the response uses `token_type` `Bearer` ([RFC 6750](https://www.rfc-editor.org/rfc/rfc6750)) and omits `cnf`. Either response returns the granted `authorization_details` ([RFC 9396](https://www.rfc-editor.org/rfc/rfc9396) §7). Sending a DPoP proof is how the client advertises support. The authorization server then binds the token to that key and will not issue a bearer token for that request.
 
-The user's access token is the output of an authorization-code grant with PKCE. That grant is what [MCP authorization, 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization) requires of an authorization server: OAuth 2.1 as `draft-ietf-oauth-v2-1-13` (still a draft; not an RFC), PKCE, the [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter, and [RFC 9207](https://www.rfc-editor.org/rfc/rfc9207) issuer check on the authorization response. The authorization request carries `authorization_details` and the `mandate` object. The issued user token contains both. Its `sub` is `user:<name>`. Its audience is the authorization server, for exchange, not the checkpoint. The first exchange copies `sub` and `mandate` and sets `act` to `{ "sub": "<jwt-svid sub>" }`. The actor's SPIFFE ID must be the agent the user grant names.
+The subject token is minted elsewhere. This authorization server does not log users in. It has no authorization endpoint, no user database, and no browser login. The subject token already carries `sub`, `mandate`, and `authorization_details`. Its audience allows it to be presented here for exchange. The first exchange copies `sub`, `mandate`, and `txn` (the subject token's `jti`) and sets `act` to `{ "sub": "<jwt-svid sub>" }`. The actor's SPIFFE ID must be the agent the subject token names. The checkpoint later trusts the exchanged token's signature on `mandate` and does not see the subject token again.
+
+The server that mints the subject token is the one that performs user authentication. If that server speaks to MCP clients, it is the one that implements authorization code with PKCE, the [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter, and the [RFC 9207](https://www.rfc-editor.org/rfc/rfc9207) issuer check, as [MCP authorization, 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization) describes. OAuth 2.1 there is still `draft-ietf-oauth-v2-1-13`, not an RFC. This repository's server only exchanges the resulting token.
 
 ### Access-token claims
 
@@ -105,7 +107,7 @@ Clock skew stays 5 seconds (`SKEW_SECONDS`).
 | `act` | Nested actor chain. See below. | [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) §4.1 |
 | `authorization_details` | One object, filtered to this `aud`. | [RFC 9396](https://www.rfc-editor.org/rfc/rfc9396) §9.1 |
 | `mandate` | The object in the schema below. Copied from the subject token. | This profile. [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) §4.2–§4.3 |
-| `cnf` | `{ "jkt": "<base64url SHA-256 JWK thumbprint>" }` of the DPoP key. | `cnf` is [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) §3.1. `jkt` is [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §6.1, thumbprint [RFC 7638](https://www.rfc-editor.org/rfc/rfc7638) |
+| `cnf` | Present only when the client sent a DPoP proof at exchange. Value is `{ "jkt": "<base64url SHA-256 JWK thumbprint>" }`. Omitted on a bearer token. | `cnf` is [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) §3.1. `jkt` is [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §6.1, thumbprint [RFC 7638](https://www.rfc-editor.org/rfc/rfc7638) |
 | `txn` | `jti` of the original user grant. Copied unchanged. | This profile. Not a registered claim. |
 | `parent_jti` | Present only on a down-scoped token. The parent access token's `jti`. | This profile. |
 
@@ -114,6 +116,8 @@ Clock skew stays 5 seconds (`SKEW_SECONDS`).
 `act` members are only `sub` and a nested `act`, the same closure as `parseAct`. The outermost `act.sub` is the current actor. The deepest `act` is the original agent. At most 8 actors (`MAX_CHAIN_DEPTH`). No id repeats. A root token has one `act` and no `parent_jti`. A down-scoped token has `parent_jti` and at least two actors.
 
 [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) §4.1 says the resource server, when applying access-control policy, considers the token's top-level claims and the current actor only. Nested `act` values are history. The checkpoint still rejects a chain that breaks the rules above, because those rules are how this authorization server builds the claim. Cedar does not treat an ancestor id as a grant. The granted actions are `authorization_details` on this token.
+
+The nested `act` claim is the on-behalf-of record that ships. [Pull request #1](https://github.com/mlescaille/agent-town/pull/1) would add an English sentence of the form "I am Researcher, acting on behalf of Planner, on behalf of user:alice." This design supersedes that pull request. The sentence is not added to the token, the checkpoint, the log, or the dashboard. The chain is the list of ids: `sub`, then actors from deepest to outermost.
 
 The single detail keeps today's shape. [RFC 9396](https://www.rfc-editor.org/rfc/rfc9396) §2.2 defines `actions` and `locations` as common fields; the type defines what else is legal. There is no IANA registry of `type` values in RFC 9396. This profile's type is `urn:agent-license:tool`, advertised in `authorization_details_types_supported` (RFC 9396 §10).
 
@@ -148,19 +152,23 @@ The same three strings are the legal values of the body's `basis`: `user_request
 - If the subject token sets `max_calls`, the new token sets `max_calls` less than or equal to it. Dropping or raising the cap is `budget_widen`. Adding a cap the subject token did not have is allowed.
 - `exp` is less than or equal to the subject token's `exp`. A later expiry is `expiry_widen`.
 - At least one reduction is strict: fewer actions, fewer locations, a lower cap, or an earlier `exp`. An equal copy is `not_narrowed`. The first hop is the exception: the agent token may equal the user grant, because that hop introduces the actor rather than a further delegate.
-- `mandate`, `sub`, and `txn` are copied. A different mandate is `invalid_request`. A `direct_request` child keeps the one action and narrows by budget or expiry.
+- `mandate`, `sub`, and `txn` are copied unchanged. `mandate.type` cannot change. Narrowing cannot turn `user_goal` into `direct_request`, `direct_request` into `user_goal`, or either into `agent_initiated`. A different `type`, or a different `user_goal` string, is `invalid_request`. A `direct_request` child keeps the one action and narrows by budget or expiry.
 - The actor SPIFFE ID is not already in the chain (`chain_cycle`). Depth stays at most 8.
 - `agent_initiated` is re-checked against the ceiling.
 
 The OAuth error for a bad detail is `invalid_authorization_details` ([RFC 9396](https://www.rfc-editor.org/rfc/rfc9396) §6). `error_description` carries the stable code (`scope_widen`, `budget_widen`, `expiry_widen`, `not_narrowed`, `chain_cycle`).
 
-Narrowing a sub-agent is another exchange. `subject_token` is the parent access token. `actor_token` is the child JWT-SVID. The new `act` is `{ "sub": "<child>", "act": <parent.act> }`. `parent_jti` is the parent's `jti`. The child proves possession of its own key. The parent's DPoP key signs the parent's requests, and the child signs its own.
+Narrowing a sub-agent is another exchange. `subject_token` is the parent access token. `actor_token` is the child JWT-SVID. The new `act` is `{ "sub": "<child>", "act": <parent.act> }`. `parent_jti` is the parent's `jti`. The mandate on that token is the parent's mandate, unchanged. When the child sends a DPoP proof, it proves its own key. The parent's key does not sign the child's token request.
 
 ## 3. Proof of possession
 
-Recommendation: **DPoP ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449)), bound by `cnf.jkt` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §6.1 under the [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) §3.1 `cnf` claim).**
+Decision: the gateway accepts both `Authorization: Bearer` ([RFC 6750](https://www.rfc-editor.org/rfc/rfc6750), which [MCP authorization, 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization) requires) and `Authorization: DPoP` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §7.1). DPoP is required whenever the client advertises support. Mutual TLS at the checkpoint is not the possession mechanism. The comparison below is why.
 
-The DPoP key is the X.509-SVID private key. At the token endpoint the agent presents that certificate (mutual TLS) and a DPoP proof signed by the same key. The authorization server checks three equalities: the certificate's URI SAN equals the JWT-SVID `sub`, the [RFC 7638](https://www.rfc-editor.org/rfc/rfc7638) thumbprint of the DPoP `jwk` equals the thumbprint of the certificate's public key exported as a JWK, and `cnf.jkt` is that thumbprint. That comparison is a key thumbprint, not `x5t#S256`, which hashes the whole certificate ([RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) §3.1). The checkpoint does not terminate the client certificate. It checks the proof.
+A client advertises support at exchange by sending a DPoP proof ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §5). The authorization server then sets `cnf.jkt` and `token_type` `DPoP`. A client advertises support at the gateway by using the `DPoP` scheme or a `DPoP` header. The gateway then requires a valid proof and a matching `cnf.jkt`. A bearer presentation of a token that contains `cnf.jkt` is rejected. A proof that fails §4.3 is rejected, and the gateway does not retry that call as a bearer token.
+
+A client that omits the DPoP proof at exchange is issued a bearer token with no `cnf` claim. The gateway accepts `Authorization: Bearer` for that token.
+
+When a proof is used, the DPoP key is the X.509-SVID private key. At the token endpoint the agent presents that certificate (mutual TLS) and a DPoP proof signed by the same key. The authorization server checks three equalities: the certificate's URI SAN equals the JWT-SVID `sub`, the [RFC 7638](https://www.rfc-editor.org/rfc/rfc7638) thumbprint of the DPoP `jwk` equals the thumbprint of the certificate's public key exported as a JWK, and `cnf.jkt` is that thumbprint. That comparison is a key thumbprint, not `x5t#S256`, which hashes the whole certificate ([RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) §3.1). The checkpoint does not terminate the client certificate. It checks the proof. A bearer issuance does not perform that check. The actor token is then a JWT-SVID alone, which [JWT-SVID §7.1](https://spiffe.io/docs/latest/spiffe-specs/jwt-svid/) treats as a bearer.
 
 | | DPoP, RFC 9449 | Mutual TLS, RFC 8705 |
 | --- | --- | --- |
@@ -174,27 +182,39 @@ The DPoP key is the X.509-SVID private key. At the token endpoint the agent pres
 | MCP HTTP clients | [MCP authorization, 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization), "Access Token Usage", says the client MUST send `Authorization: Bearer`. [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §7.1 says a DPoP-bound token uses scheme `DPoP` plus a `DPoP` header. Those two requirements disagree. | A client certificate on the connection to the gateway. The MCP profile is HTTP authorization, not client-certificate TLS. |
 | SPIRE | The workload already holds the key. | The workload already holds the certificate. A new certificate changes `x5t#S256` even when the key is unchanged. |
 
-Mutual TLS at the token endpoint is how the authorization server ties the JWT-SVID to a key. The checkpoint does not ask for that certificate. A TLS-terminating proxy would strip it before the process that runs Cedar, and the MCP profile's resource request is an HTTP `Authorization` header.
+Mutual TLS at the token endpoint is how a DPoP issuance ties the JWT-SVID to a key. The checkpoint does not ask for that certificate. A TLS-terminating proxy would strip it before the process that runs Cedar, and the MCP profile's resource request is an HTTP `Authorization` header.
 
-The gateway sets `dpop_bound_access_tokens_required` to true and lists `ES256` in `dpop_signing_alg_values_supported` ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) §2). Those parameters are the RFC 9449 ones RFC 9728 registers. A request that presents the access token as a bearer token gets 401 with `WWW-Authenticate: DPoP` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §7.1). A proof that fails §4.3 uses `error="invalid_dpop_proof"`.
+The gateway lists `ES256` in `dpop_signing_alg_values_supported` ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) §2) so a client that can sign a proof knows the algorithm. It leaves `dpop_bound_access_tokens_required` unset. RFC 9728 defines that flag as "always requires" DPoP-bound tokens, and the default when it is omitted is false. Setting it to true would reject the bearer clients this decision keeps. A failed proof uses `error="invalid_dpop_proof"` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §7.1).
 
-This diverges from the MCP 2026-07-28 requirement that clients send `Authorization: Bearer`. Metadata, discovery, `resource`, and audience checks still follow that specification. The scheme does not. Clients this repository ships send DPoP. A client that only implements the Bearer scheme cannot call this gateway. Giving that client a bearer token would drop the key check the justification provides today. Question 15 records that choice.
+### Bearer fallback
+
+Bearer exists so an MCP client that only implements `Authorization: Bearer` can call the gateway. The cost is the possession check the 0.1.0 justification provided.
+
+| | DPoP-bound token | Bearer token |
+| --- | --- | --- |
+| Who can present it | The holder of the SVID private key | Anyone who copies the access token |
+| Bound to this token | `ath` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.2) | The token string itself. A copy is enough. |
+| Replay | Proof `jti` is single-use inside the 300-second window (§11.1) | No per-call `jti`. The token works until `exp` or introspection returns `active: false`. |
+| Body, including `why` | Profile claim `req` covers the raw body | The body is not signed. A thief can change `why`, `basis`, and `goal`. The checkpoint still compares `basis` and `goal` to `mandate`, and it logs whatever `why` arrived. |
+| What still applies | Scope, mandate, budget, Cedar, introspection, 900-second cap | Those same checks. They do not restore proof of possession. |
+
+A client that can send DPoP is not issued a bearer token. The remaining hole is a client that never advertises support, and any later copy of the bearer token that client was issued. Introspection and the 900-second cap are what limit that copy. They are a window, not a key.
 
 ### What the justification becomes
 
-The 0.1.0 justification (`packages/core/src/justify.ts`, spec §8) is one JWS with a 300-second cap, a `jti` replay cache, and a binding to the license, the action, the location, the mandate, and a `why` string of 12 to 500 characters. DPoP replaces the signature and the replay cache. It does not replace `why`.
+The 0.1.0 justification (`packages/core/src/justify.ts`, spec §8) is one JWS with a 300-second cap, a `jti` replay cache, and a binding to the license, the action, the location, the mandate, and a `why` string of 12 to 500 characters. A DPoP proof replaces the signature and the replay cache. A bearer call has neither. `why` stays in the body either way.
 
 | 0.1.0 guarantee | Target |
 | --- | --- |
-| Signed by the licensed agent's key | DPoP signature verifies under the `jwk` in the proof header, and that key's thumbprint equals `cnf.jkt` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.3, §6, §7). |
-| Bound to this license (`license_jti`) | `ath` over this access token (§4.2). |
-| Lifetime at most 300 seconds | The checkpoint accepts `iat` only when `now - 300 <= iat <= now + 5`, the old cap (`MAX_JUSTIFICATION_TTL_SECONDS`) and the old skew. DPoP has no `exp`; the window is the server's. |
-| `jti` replay rejected | [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §11.1. The checkpoint stores proof `jti` values for the window, as `seenJustifications` does in `packages/core/src/assess.ts`. |
+| Signed by the licensed agent's key | On a DPoP call, the signature verifies under the `jwk` in the proof header, and that key's thumbprint equals `cnf.jkt` ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.3, §6, §7). On a bearer call, nothing proves the caller holds the agent key. |
+| Bound to this license (`license_jti`) | On a DPoP call, `ath` over this access token (§4.2). On a bearer call, possession of the token string is the only binding. |
+| Lifetime at most 300 seconds | On a DPoP call, the checkpoint accepts `iat` only when `now - 300 <= iat <= now + 5`, the old cap (`MAX_JUSTIFICATION_TTL_SECONDS`) and the old skew. DPoP has no `exp`; the window is the server's. A bearer token has no per-call window. Its lifetime is the access token's `exp`, at most 900 seconds. |
+| `jti` replay rejected | On a DPoP call, [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §11.1. The checkpoint stores proof `jti` values for the window, as `seenJustifications` does in `packages/core/src/assess.ts`. A bearer call has no proof `jti`. |
 | `action` and `location` are this call | The checkpoint compares the MCP tool call with `authorization_details`. The proof does not name them. |
-| `why`, `basis`, `goal` | They stay in the JSON body. `why` is still 12 to 500 characters and is still the Merkle leaf's `why`. `basis` must equal `expectedBasis(mandate.type)`. `goal` is present only for `user_goal` and must equal `mandate.goal`. |
-| Body swap under a captured proof | A profile claim on the DPoP payload, `req`, is unpadded base64url(SHA-256(raw request body)). [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.2 allows additional claims. `req` is not `ath`. The checkpoint recomputes it. A proof without `req` is rejected. |
-| `txn`, `req_hash`, `mandate_type` echoed in the justification | Not echoed. The access token already carries `txn` and `mandate`. The authorization server checked the user grant at exchange time. |
-| Optional user-request JWS at the checkpoint | Not presented on the call. The user grant was the `subject_token`. |
+| `why`, `basis`, `goal` | They stay in the JSON body. `why` is still 12 to 500 characters and is still the Merkle leaf's `why`. `basis` must equal `expectedBasis(mandate.type)`. `goal` is present only for `user_goal` and must equal `mandate.goal`. On a bearer call those fields are checked and logged, and they are not signed. |
+| Body swap under a captured proof | On a DPoP call, a profile claim `req` is unpadded base64url(SHA-256(raw request body)). [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.2 allows additional claims. `req` is not `ath`. The checkpoint recomputes it. A DPoP proof without `req` is rejected. A bearer call has no `req` check. |
+| `txn`, `req_hash`, `mandate_type` echoed in the justification | Not echoed. The access token already carries `txn` and `mandate`. |
+| Optional user-request JWS at the checkpoint | Not accepted. The checkpoint trusts the authorization server's signature on `mandate` and does not re-check the subject token. |
 
 `req` is a private profile claim. It is the piece that keeps "this call, for this reason" attached to the proof after the justification JWS is gone.
 
@@ -202,23 +222,23 @@ The 0.1.0 justification (`packages/core/src/justify.ts`, spec §8) is one JWS wi
 
 The checkpoint is an OAuth resource server and an MCP gateway. Protected resource metadata ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) §2–§3) is served at `/.well-known/oauth-protected-resource` and, when the MCP path is not `/`, at `/.well-known/oauth-protected-resource/<path>` as well. A 401 carries `resource_metadata` ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) §5.1). The document includes `authorization_servers` with one issuer ([MCP authorization, 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization); the client chooses among them per RFC 9728 §7.6). It also includes `authorization_details_types_supported` with `urn:agent-license:tool`.
 
-The authorization server publishes [RFC 8414](https://www.rfc-editor.org/rfc/rfc8414) metadata: the token endpoint, the introspection endpoint, `code_challenge_methods_supported` including `S256`, and `dpop_signing_alg_values_supported`. The 2026-07-28 MCP flow sends `code_challenge` on the authorization request and `code_verifier` on the token request.
+The in-repo authorization server publishes [RFC 8414](https://www.rfc-editor.org/rfc/rfc8414) metadata for the token endpoint and the introspection endpoint. `grant_types_supported` lists the token-exchange grant and does not list `authorization_code`. `dpop_signing_alg_values_supported` lists `ES256`. Protected resource metadata omits `dpop_bound_access_tokens_required`. Authorization code, PKCE, and the [RFC 9207](https://www.rfc-editor.org/rfc/rfc9207) issuer check belong to the server that mints the subject token, not to this one.
 
 On `tools/call` the checkpoint does this, in order, and appends a Merkle record either way. It does not call the tool after a deny. A failed token or proof is HTTP 401. An in-scope failure (mandate, budget, Cedar) is HTTP 403, which matches the MCP error table. 0.1.0 returns 403 for both (`services/checkpoint/src/server.ts`). The stable `code` values from spec §9 stay (`bad_signature`, `expired`, `act_chain`, `justification_replay`, `justification_mismatch`, `over_scope`, `budget_exceeded`, `policy_deny`, `pdp_unreachable`), plus `introspection_unreachable`.
 
 1. JWT access token: `typ` `at+jwt`, signature under the authorization server's published key, `iss`, `aud` equal to this resource, `exp` / `nbf` with 5 seconds of skew ([RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) §2).
 2. Introspection ([RFC 7662](https://www.rfc-editor.org/rfc/rfc7662) §2). `active` must be true. An unreachable authorization server is a deny, code `introspection_unreachable`.
-3. DPoP proof per [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.3, including `ath`, `cnf.jkt`, the 300-second `iat` window, a fresh `jti`, and `req`.
+3. Presentation. If the token has `cnf.jkt`, or the request uses the `DPoP` scheme or a `DPoP` header, check the proof per [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §4.3, including `ath`, the 300-second `iat` window, a fresh `jti`, and `req`. Otherwise accept `Authorization: Bearer` for a token that has no `cnf` claim.
 4. `act` structure: outermost `act.sub` equals `client_id`, depth at most 8, no duplicates. Nested actors are not an allow.
-5. `mandate` shape, and the `agent_initiated` ceiling.
+5. `mandate` shape, and the `agent_initiated` ceiling. The checkpoint trusts the authorization server's signature for the mandate value. It does not fetch the subject token, recompute a request hash, or compare the call to the user grant.
 6. Body `basis` and `goal` against the mandate.
 7. The tool name is in `actions`, and `mcp:<server>` is in `locations`. For `direct_request`, both equal `mandate.action` and `mandate.location`.
-8. `budget.max_calls` against allows already counted for this `jti` in this process. The counter still dies on restart; [ROADMAP.md](../../ROADMAP.md) already says so.
-9. AuthZEN `POST /access/v1/evaluation`, the same request shape as spec §10. The booleans in `policies/mandates.cedar` are unchanged. `justification_ok` means the DPoP proof and `req` checked out. `effect` is still derived from the verb. `permit-bound-call`, `forbid-agent-initiated-writes`, and `forbid-direct-request-inexact` stay. Cedar's default is deny. An unreachable PDP is `pdp_unreachable`.
+8. `budget.max_calls` against allows already counted for this `jti` in this process. The count is not shared across agents or across checkpoint processes. See Future work.
+9. AuthZEN `POST /access/v1/evaluation`, the same request shape as spec §10. The policy text in `policies/mandates.cedar` stays. `justification_ok` means the presentation checks for the scheme in use passed: the DPoP proof and `req` on a DPoP call, and the absence of `cnf` plus a bearer header on a bearer call. `permit-bound-call` therefore allows a bearer call that presented no key. That is the bearer tradeoff in section 3, visible in the policy input. `effect` is still derived from the verb. `forbid-agent-initiated-writes` and `forbid-direct-request-inexact` stay. Cedar's default is deny. An unreachable PDP is `pdp_unreachable`.
 
 `tools/list` returns only tools whose names are in `actions` and whose server location is in `locations`. `tools/call` is the invoke path above. The action string is the tool name and must match the existing action grammar. The location is `mcp:<server>`, which matches the existing location grammar. That is the mapping [ROADMAP.md](../../ROADMAP.md) describes.
 
-The decision record in `packages/core/src/types.ts` (`DecisionRecord`) is unchanged. `justification_jti` stores the DPoP proof `jti`. `justification_hash` stores the hash of the proof. The log signs the tree head as it does now (`agent-log-sth+jwt`, Ed25519).
+The decision record in `packages/core/src/types.ts` (`DecisionRecord`) is unchanged. On a DPoP call, `justification_jti` stores the proof `jti` and `justification_hash` stores the hash of the proof. On a bearer call both are empty, which is the 0.1.0 value for a call that had no justification. The log signs the tree head as it does now (`agent-log-sth+jwt`, Ed25519).
 
 ## 5. Revocation and lifetimes
 
@@ -236,18 +256,18 @@ Short lifetimes alone do not revoke a token at a chosen moment. Introspection do
 
 Recommendation: **a minimal authorization server in this repository, in place of `services/issuer`.**
 
-It has to do five things the 0.1.0 issuer already approximates: RFC 8693 exchange with an external JWT-SVID as `actor_token`, RFC 9396 details with this type's comparison, an immutable `mandate`, `cnf.jkt`, and RFC 7662 introspection. It also needs authorization code plus PKCE for the human grant, because MCP clients require that of the authorization server, and RFC 8414 metadata. It does not need to be a general identity product.
+It exchanges a subject token minted elsewhere. It does not log users in. The work is RFC 8693 exchange with an external JWT-SVID as `actor_token`, RFC 9396 details with this type's comparison, an immutable `mandate`, `cnf.jkt` when the client sends DPoP, RFC 7662 introspection, and RFC 8414 metadata for those endpoints. User authentication stays at the issuer of the subject token.
 
 | Option | What it already does | What this profile would still build |
 | --- | --- | --- |
-| In-repo | `attenuateLicense`, mandate checks, `act` limits, Ed25519 log, localhost bind | Token endpoint, RS256 access tokens, DPoP, introspection, authorization-code + PKCE, RFC 8414 metadata |
+| In-repo | `attenuateLicense`, mandate checks, `act` limits, Ed25519 log, localhost bind | Token endpoint for exchange only, validation of an externally minted subject token, RS256 access tokens, DPoP and bearer issuance, introspection, RFC 8414 metadata |
 | Keycloak | Standard token exchange since 26.2 for an internal Keycloak access token exchanged for another. Delegation `actor_token` is also a Keycloak access token (`actor_token_type` `urn:ietf:params:oauth:token-type:access_token`), and the subject token carries `may_act` ([Keycloak token exchange](https://www.keycloak.org/securing-apps/token-exchange)). DPoP exists. | A SPIFFE JWT-SVID is not that actor token. The never-widen rules and the mandate ceiling are not Keycloak policy. Running it pulls this prototype off a single localhost process. |
 | Ory Hydra open source | OAuth 2.0 and OpenID Connect. The vendor's feature table marks token exchange as absent from open source and present in Ory Network and the enterprise license ([ory.com/hydra](https://www.ory.com/hydra)). | RFC 8693 in the open-source server, DPoP (public request [ory/hydra#3235](https://github.com/ory/hydra/issues/3235) was closed stale in July 2025 without a merge), and the mandate comparison. |
 | Authlete | RFC 8693, RFC 9396, and DPoP, with the authorization decision left to the API caller ([Authlete token exchange](https://developers.authlete.com/protocols-and-flows/advanced-flows/oauth-2-0-token-exchange-rfc-8693)). | A commercial API in front of the same comparison code. The prototype's services are localhost-only and do not take a network dependency for issuance. |
 
 Keycloak and Hydra are the right tools when the missing piece is a stock OAuth server. The missing piece here is the narrowing rule in `packages/core/src/attenuate.ts`. That rule stays in this repository either way. Putting the token endpoint next to it avoids a second product that cannot see a SPIFFE actor token.
 
-The in-repo server is not a full identity provider. The human grant is authorization code plus PKCE against this server for local dev (the user is `user:<name>`, the same ids as today). An external identity provider can later mint the subject token; the exchange rules do not change. That split is an open question, not a requirement.
+The in-repo server has no login. An MCP client that can only run authorization code against the issuer advertised by the checkpoint will not get a token from this server. It obtains a subject token from the external issuer, then calls this token endpoint with the exchange grant. `sub` remains `user:<name>`, the same ids as today. Local tests may present a fixture subject token on `127.0.0.1`. That fixture is a stand-in for the external token, not a user login.
 
 ## 7. Dropped, kept, migration
 
@@ -265,7 +285,8 @@ Kept:
 - The mandate object and the three types, including the `agent_initiated` ceiling.
 - `policies/mandates.cedar` and the AuthZEN routes in `services/pdp/src/server.ts`.
 - The Merkle log (`packages/core/src/merkle.ts`, `services/log`) and `agentlicense log verify`.
-- The documentation site under `site/`. This checkout has no operational dashboard. The log's HTTP API is what a later view would read. This design does not add one.
+- The documentation site under `site/`.
+- The Merkle log as the source a later "My agents" view reads. The view itself is new work, below.
 
 Package names stay `agentlicense`, `@agentlicense/core`, and `@agentlicense/sdk`. They are at version `0.1.0`. [`.github/workflows/publish.yml`](../../.github/workflows/publish.yml) publishes all three on a `v*` tag that matches that version. [README.md](../../README.md) says they are not on the npm registry until that tag runs.
 
@@ -274,7 +295,7 @@ API:
 | Package | 0.1.0 | Target |
 | --- | --- | --- |
 | `@agentlicense/core` | `issueLicense`, `attenuateLicense`, `createJustification`, `verifyLicense`, `assessPresentation` | `exchange` request builder, `assertNarrowed` exported, `verifyAccessToken`, `verifyDpop`. Merkle exports stay. |
-| `@agentlicense/sdk` | `licensed(fetch)` sets `Agent-License` and `Agent-Justification` (`packages/sdk/src/index.ts`) | `licensed(fetch)` sets `Authorization: DPoP` and a `DPoP` header. `why` stays an option. The URL passed to `fetch` is still not contacted. |
+| `@agentlicense/sdk` | `licensed(fetch)` sets `Agent-License` and `Agent-Justification` (`packages/sdk/src/index.ts`) | `licensed(fetch)` sends DPoP, because it holds the agent key and therefore advertises support. `why` stays an option. The URL passed to `fetch` is still not contacted. Other clients may send `Authorization: Bearer`. |
 | `agentlicense` | `keys init` writes agent JWKs. `issue` and `attenuate` print a license JWS. | `issue` and `attenuate` call the token endpoint. `keys init` writes the log key and the RS256 authorization-server key. It does not write agent keys. |
 
 Deprecation, assuming a publish happens:
@@ -294,19 +315,38 @@ Each phase is a separate change. `pnpm test` for that phase passes without the l
 | --- | --- | --- |
 | 1 | Token endpoint emits the claims table. Subject token may be a 0.1.0 user-request JWS, accepted only on `127.0.0.1`. Old `/v1/licenses` still works. | A fixture exchange. A widened detail returns `invalid_authorization_details`. Mandate, `sub`, and `txn` on the JWT equal the user grant. `alg` is `RS256`, `typ` is `at+jwt`. |
 | 2 | `actor_token` is a JWT-SVID checked against a local SPIRE bundle. | A wrong trust domain is rejected. A second exchange adds one `act` level. A repeated actor and a ninth actor are rejected. |
-| 3 | `POST /v1/invoke` accepts a DPoP proof with `ath` and `req`. The justification header still works. | A reused proof `jti` is `justification_replay`. A proof over a different body is `justification_mismatch`. A `jkt` mismatch is `bad_signature`. Cedar and the log still run. |
-| 4 | Protected resource metadata and MCP `tools/list` / `tools/call`. | A GET of the metadata document returns the issuer and `dpop_bound_access_tokens_required: true`. `tools/list` omits a tool outside the detail. A denied `tools/call` is in the log and is not forwarded. |
+| 3 | `POST /v1/invoke` accepts a DPoP proof with `ath` and `req`, and accepts a bearer token that has no `cnf`. The justification header still works. | A reused proof `jti` is `justification_replay`. A proof over a different body is `justification_mismatch`. A `jkt` mismatch is `bad_signature`. A bearer presentation of a token that has `cnf.jkt` is denied. Cedar and the log still run. |
+| 4 | Protected resource metadata and MCP `tools/list` / `tools/call`. Both `Authorization` schemes. | A GET of the metadata document returns the issuer, lists `ES256` in `dpop_signing_alg_values_supported`, and omits `dpop_bound_access_tokens_required`. `tools/list` omits a tool outside the detail. A denied `tools/call` is in the log and is not forwarded. A failed DPoP proof is not accepted on a second try as bearer. |
 | 5 | Introspection is required. `/v1/licenses` and `/v1/licenses/attenuate` return 410. The SDK stops sending the old headers. | A token with `active: false` is denied before `exp`. An unreachable introspection endpoint is denied. A request with only `Agent-License` is denied. |
 
-Phase 1's localhost subject-token exception is deleted in phase 5. Until then it is how the existing user-request fixtures drive the new token.
+Phase 1's localhost fixture stands in for an externally minted subject token. Phase 5 deletes the old license routes. It does not add a login.
+
+### My agents dashboard
+
+"My agents" is new work. This checkout has no such screen. `site/` remains the documentation site.
+
+It is a read-only view for the user in `sub`:
+
+- One row per current agent access token: the agent SPIFFE id, `mandate.type`, the goal text when the type is `user_goal`, the action and location sets, `exp`, and this checkpoint's call count against `max_calls` when it has one.
+- The `act` chain as ids, user first and current actor last. No English sentence.
+- Recent log entries for that user: time, allow or deny, action, location, and `why`.
+
+The view reads the authorization server's outstanding tokens and the Merkle log. It does not issue, narrow, or revoke, and it is not a second policy decision point.
+
+The next step is a static mockup for the owner to approve. Building the page waits on that approval. This document does not include the mockup.
+
+### Future work
+
+A budget counter shared across agents is out of scope for this rebase. The checkpoint keeps today's in-process count, keyed by access-token `jti`. That count is empty after a restart, and two agents or two checkpoint processes do not share it. A later change can add a shared counter. It is not one of the phases above.
 
 ## 8. Threat-model deltas and open questions
 
 | Threat | 0.1.0 | This design |
 | --- | --- | --- |
-| Stolen license used from another process | The thief still needs the agent JWK to sign a justification. | The thief still needs the SVID private key to sign DPoP. A stolen JWT-SVID alone fails the token-endpoint certificate check. |
-| Stolen proof replayed | 300-second justification, in-process `jti` set. The set is empty after a restart. | Same window, same gap ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §11.1). A restart forgets `jti`s. |
-| Proof rebound to a different body | The justification names `action`, `location`, and `why`. | Closed only by the profile `req` claim. DPoP by itself does not bind the body. |
+| Stolen DPoP-bound access token | The thief still needs the agent JWK to sign a justification. | The thief still needs the SVID private key. A stolen JWT-SVID alone fails the DPoP token-endpoint certificate check. |
+| Stolen bearer access token | Same justification requirement. 0.1.0 has no bearer license. | Anyone who copies the token can call until `exp` or revocation. Issuance did not prove the SVID key. `why` in the log is whatever the caller sent. |
+| Stolen proof replayed | 300-second justification, in-process `jti` set. The set is empty after a restart. | Same window for DPoP proofs ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) §11.1). A restart forgets `jti`s. A bearer token has no proof `jti`. |
+| Proof rebound to a different body | The justification names `action`, `location`, and `why`. | On DPoP, closed by the profile `req` claim. DPoP without `req` does not bind the body. On bearer, the body is not signed. |
 | Delegate widens scope | `attenuateLicense` rejects it. The checkpoint does not re-check the parent. | The authorization server rejects it. The checkpoint still does not see the parent detail. [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) §4.1 tells the resource server not to authorize from nested `act`. Ancestor scope is still not embedded ([ROADMAP.md](../../ROADMAP.md)). |
 | Long-lived token after the user changes their mind | No revocation. The license lives until `exp`. | Introspection returns `active: false`. The access token also dies within 900 seconds. |
 | Authorization server unavailable | Issuance fails. Already-issued licenses still verify. | Every call fails closed. Availability of the authorization server becomes part of the call path. |
@@ -320,18 +360,11 @@ Phase 1's localhost subject-token exception is deleted in phase 5. Until then it
 
 Open questions for the owner:
 
-1. During narrowing, may `user_goal` become `direct_request` for one in-scope action, or does that invent an instruction the user did not grant? 0.1.0 copies the mandate. This design copies it too.
-2. Should the checkpoint ever see the user grant again, or is the authorization server's signature on `mandate` enough?
-3. For `direct_request`, is a shorter `exp` or a lower `max_calls` enough of a narrowing, or should a sub-agent be unable to receive a direct request?
-4. May a user grant an `agent_initiated` ceiling smaller than the built-in three actions, or is that set the only legal one?
-5. Should the access token name the log key, so a verifier knows which log to ask? 0.1.0 does not.
-6. There is no dashboard in this checkout. `site/` is docs, and `services/log` is the API. Is that the surface to keep?
-7. Is the private DPoP claim name `req` acceptable for the body hash, or should it be a URI?
-8. Is 900 seconds the right access-token cap, and is the 300-second DPoP window still right once proofs are single-use?
-9. Should this authorization server be the thing that logs the user in, or should it only exchange a subject token minted elsewhere?
-10. Do agent ids stay `spiffe://agent-license.example/agent/<name>`, or do instances need another path segment?
-11. Do `txn` and `parent_jti` earn a place in the IANA JWT claims registry next to `mandate`, or are they log fields only?
-12. Budgets still live in one checkpoint process. Is a shared counter in scope for this rebase?
-13. The on-behalf-of English sentence is only in open pull request #1. This design does not add it. Is the `act` chain the record that should ship?
-14. Confirm the SVID key type is ECDSA P-256 (`ES256` DPoP) before the authorization server advertises that `alg` and no other.
-15. MCP 2026-07-28 requires `Authorization: Bearer`. This design requires `Authorization: DPoP`. Accept that divergence, or keep bearer tokens and drop sender-constraining?
+1. For `direct_request`, is a shorter `exp` or a lower `max_calls` enough of a narrowing, or should a sub-agent be unable to receive a direct request?
+2. May a user grant an `agent_initiated` ceiling smaller than the built-in three actions, or is that set the only legal one?
+3. Should the access token name the log key, so a verifier knows which log to ask? 0.1.0 does not.
+4. Is the private DPoP claim name `req` acceptable for the body hash, or should it be a URI?
+5. Is 900 seconds the right access-token cap, and is the 300-second DPoP window still right once proofs are single-use?
+6. Do agent ids stay `spiffe://agent-license.example/agent/<name>`, or do instances need another path segment?
+7. Do `txn` and `parent_jti` earn a place in the IANA JWT claims registry next to `mandate`, or are they log fields only?
+8. Confirm the SVID key type is ECDSA P-256 (`ES256` DPoP) before the authorization server advertises that `alg` and no other.
